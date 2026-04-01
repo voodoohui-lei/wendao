@@ -806,7 +806,7 @@ function render() {
           <td>${c.items.length} 项</td>
           <td><span class="amt">¥${c.amount.toLocaleString()}</span></td>
         </tr>
-        <tr class="student-row" id="stu_${rowId}" style="display:none">
+        <tr class="student-row" id="stu_${rowId}">
           <td colspan="3" style="padding:10px;background:#fafafa">${detailHtml}</td>
         </tr>`;
       }).join('')
