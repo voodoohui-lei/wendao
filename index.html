@@ -790,11 +790,8 @@ function render() {
   document.getElementById('expensesTable').innerHTML = categories.length > 0
     ? categories.map((c, i) => {
         const badge = i < 3 ? `<span class="rank-badge top">${i+1}</span>` : `<span class="rank-badge">${i+1}</span>`;
-        return makeExpandRows('exp'+i, [
-          badge + ' ' + c.name,
-          c.items.length + ' 项',
-          `<span class="amt">¥${c.amount.toLocaleString()}</span>`
-        ], c.items.map(e => `
+        const rowId = 'exp'+i;
+        const detailHtml = c.items.map(e => `
           <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:12px">
             <div style="flex:1">
               <div style="color:#666">${e.date}</div>
@@ -802,7 +799,16 @@ function render() {
             </div>
             <div style="font-weight:600;color:var(--red)">¥${e.amount.toLocaleString()}</div>
           </div>
-        `).join(''));
+        `).join('');
+        
+        return `<tr class="expand-row" onclick="toggleStudents('stu_${rowId}', this)">
+          <td style="cursor:pointer">${badge} ${c.name}</td>
+          <td>${c.items.length} 项</td>
+          <td><span class="amt">¥${c.amount.toLocaleString()}</span></td>
+        </tr>
+        <tr class="student-row" id="stu_${rowId}" style="display:none">
+          <td colspan="3" style="padding:10px;background:#fafafa">${detailHtml}</td>
+        </tr>`;
       }).join('')
     : '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:20px">暂无支出记录</td></tr>';
 }
