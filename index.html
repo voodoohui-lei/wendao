@@ -145,13 +145,30 @@
       border-radius: var(--radius); padding: 20px 24px;
       color: #fff; margin-bottom: 14px; display: flex;
       justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+      position: relative; padding-bottom: 30px;
     }
     .profit-left h2 { font-size: 14px; opacity: 0.85; margin-bottom: 4px; }
     .profit-left .profit-num { font-size: 32px; font-weight: 800; }
+    .profit-left .profit-target {
+      font-size: 12px; opacity: 0.8; margin-top: 4px;
+    }
     .profit-right { display: flex; gap: 20px; }
     .profit-metric { text-align: center; }
     .profit-metric .pm-label { font-size: 11px; opacity: 0.75; }
     .profit-metric .pm-value { font-size: 18px; font-weight: 700; margin-top: 2px; }
+    /* 利润进度条 */
+    .profit-progress {
+      position: absolute; bottom: 0; left: 24px; right: 24px; height: 4px;
+      background: rgba(255,255,255,0.25); border-radius: 2px; overflow: hidden;
+    }
+    .pp-bar {
+      height: 100%; background: #fff; border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    .pp-label {
+      position: absolute; bottom: 8px; right: 24px; font-size: 11px;
+      opacity: 0.75;
+    }
 
     /* KPI 行 */
     .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 14px; }
@@ -306,6 +323,7 @@
     <div class="profit-left">
       <h2 id="profitTitle">本月净利润</h2>
       <div class="profit-num" id="profitValue">¥0</div>
+      <div class="profit-target">目标 <span id="profitTarget">—</span></div>
     </div>
     <div class="profit-right">
       <div class="profit-metric">
@@ -318,8 +336,13 @@
       </div>
       <div class="profit-metric">
         <div class="pm-label">利润达成率</div>
-        <div class="pm-value" id="profitRate">0%</div>
+        <div class="pm-value" id="profitRate">—</div>
       </div>
+    </div>
+    <!-- 利润进度条 -->
+    <div class="profit-progress">
+      <div class="pp-bar" id="profitProgressBar"></div>
+      <div class="pp-label" id="profitProgressLabel">—</div>
     </div>
   </div>
 
@@ -617,9 +640,23 @@ function render() {
   document.getElementById('profitValue').style.color = profit >= 0 ? '#fff' : '#ffcccc';
   document.getElementById('profitIncome').textContent = fmtFull(revenue);
   document.getElementById('profitExpense').textContent = fmtFull(totalExpense);
-  const profitTarget = getTarget('profit') || DB.targets.year.profit;
+  // 获取利润目标（netProfitTarget 或 fallback 到 profit）
+  let profitTarget = 0;
+  if (period === 'year') {
+    profitTarget = DB.targets.year.profit;
+  } else {
+    const m = currentMonth || (new Date().getMonth()+1);
+    const mt = DB.targets.monthly[String(m)];
+    profitTarget = mt ? (mt.netProfitTarget || mt.profit) : 0;
+    if (!profitTarget) profitTarget = DB.targets.year.profit;
+  }
   const profitRate = profitTarget ? Math.round(profit / profitTarget * 100) : 0;
+  document.getElementById('profitTarget').textContent = profitTarget ? '¥' + fmt(profitTarget) : '—';
   document.getElementById('profitRate').textContent = profitRate + '%';
+  // 更新利润进度条
+  document.getElementById('profitProgressBar').style.width = Math.min(profitRate, 100) + '%';
+  document.getElementById('profitProgressBar').style.background = profitRate >= 100 ? '#a8e6cf' : '#fff';
+  document.getElementById('profitProgressLabel').textContent = profitRate >= 100 ? '已达标' : (profitRate + '%');
 
   // KPI
   const rTarget = getTarget('recruit');
