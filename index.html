@@ -433,7 +433,7 @@
     </div>
     <div id="tab-daily" class="tab-content">
       <table class="data-table">
-        <thead><tr><th>日期</th><th>招生</th><th>招商</th><th>赋能包</th><th>优惠券</th><th>总营收</th><th>支出</th><th>利润</th></tr></thead>
+        <thead><tr><th>日期</th><th>招生</th><th>招商</th><th>赋能包</th><th>优惠券</th><th>总营收</th><th>支出（点击展开明细）</th><th>利润</th></tr></thead>
         <tbody id="dailyTable"></tbody>
       </table>
     </div>
@@ -691,6 +691,8 @@ function render() {
     const dayExp = (DB.expenses || []).filter(e => e.date === d.date).reduce((s,e) => s + e.amount, 0);
     const coupon = d.coupon_amt || 0;
     const dayRev = d.recruit + d.fb_amt + coupon;
+    const dayExpenses = (DB.expenses || []).filter(e => e.date === d.date);
+    const hasExpenses = dayExpenses.length > 0;
     return `<tr>
       <td>${d.date}</td>
       <td class="amt">${fmtFull(d.recruit)}</td>
@@ -698,8 +700,43 @@ function render() {
       <td>${d.fb_cnt > 0 ? d.fb_cnt+'个/'+fmtFull(d.fb_amt) : '—'}</td>
       <td style="color:#16a085;font-weight:600">${coupon > 0 ? fmtFull(coupon) : '—'}</td>
       <td style="font-weight:600">${fmtFull(dayRev)}</td>
-      <td style="color:var(--red)">${dayExp > 0 ? fmtFull(dayExp) : '—'}</td>
+      <td style="color:var(--red);cursor:${hasExpenses?'pointer':'default'}"
+          onclick="toggleDailyExp('${d.date}', this)">
+        ${dayExp > 0 ? fmtFull(dayExp) : '—'}
+      </td>
       <td style="color:${dayRev-dayExp>=0?'var(--green)':'var(--red)'};font-weight:700">${fmtFull(dayRev - dayExp)}</td>
+    </tr>
+    <tr id="expRow-${d.date}" style="display:none;background:#fafafa">
+      <td colspan="8" style="padding:15px">
+        <div style="max-height:300px;overflow-y:auto">
+          ${dayExpenses.length > 0 ? `
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+              <thead><tr style="background:#e8f4f8">
+                <th style="padding:8px;text-align:left;border-bottom:1px solid #ddd">类别</th>
+                <th style="padding:8px;text-align:left;border-bottom:1px solid #ddd">项目</th>
+                <th style="padding:8px;text-align:right;border-bottom:1px solid #ddd">金额</th>
+              </tr></thead>
+              <tbody>
+                ${dayExpenses.map(e => `
+                  <tr>
+                    <td style="padding:6px;border-bottom:1px solid #eee;color:#666">${e.category || '—'}</td>
+                    <td style="padding:6px;border-bottom:1px solid #eee">${e.name}</td>
+                    <td style="padding:6px;border-bottom:1px solid #eee;text-align:right;font-weight:600;color:var(--red)">
+                      ¥${e.amount.toLocaleString()}
+                    </td>
+                  </tr>
+                `).join('')}
+                <tr style="background:#fff8f0">
+                  <td colspan="2" style="padding:6px;text-align:right;font-weight:600">小计</td>
+                  <td style="padding:6px;text-align:right;font-weight:700;color:var(--red)">
+                    ¥${dayExp.toLocaleString()}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          ` : '<p style="color:#999;padding:10px;text-align:center">当日无支出明细</p>'}
+        </div>
+      </td>
     </tr>`;
   }).join('');
 
@@ -707,6 +744,20 @@ function render() {
   updatePie(courses);
   // 趋势图
   updateTrend();
+}
+
+// ===== 支出明细展开/收起 =====
+function toggleDailyExp(date, cell) {
+  const row = document.getElementById('expRow-' + date);
+  if (row.style.display === 'none') {
+    row.style.display = 'table-row';
+    cell.style.background = '#e8f4f8';
+    cell.style.fontWeight = '600';
+  } else {
+    row.style.display = 'none';
+    cell.style.background = '';
+    cell.style.fontWeight = '';
+  }
 }
 
 function setProgress(prefix, rate, done, left) {
