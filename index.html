@@ -440,7 +440,7 @@
     </div>
     <div id="tab-expenses" class="tab-content">
       <table class="data-table">
-        <thead><tr><th>日期</th><th>类别</th><th>项目名称</th><th>金额</th></tr></thead>
+        <thead><tr><th>类别（点击展开明细）</th><th>项目数</th><th>金额</th></tr></thead>
         <tbody id="expensesTable"></tbody>
       </table>
     </div>
@@ -767,17 +767,44 @@ function render() {
   updateTrend();
 
   // ===== 支出明细 =====
-  const allExpenses = (DB.expenses || []).slice().reverse();
-  document.getElementById('expensesTable').innerHTML = allExpenses.length > 0
-    ? allExpenses.map(e => `
-        <tr>
-          <td>${e.date}</td>
-          <td style="color:#666">${e.category || '—'}</td>
-          <td>${e.name}</td>
-          <td style="font-weight:600;color:var(--red)">¥${e.amount.toLocaleString()}</td>
-        </tr>
-      `).join('')
-    : '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">暂无支出记录</td></tr>';
+  const allExpenses = (DB.expenses || []);
+  
+  // 按类别分组
+  const categoryMap = {};
+  allExpenses.forEach(e => {
+    const cat = e.category || '其他';
+    if (!categoryMap[cat]) {
+      categoryMap[cat] = {
+        name: cat,
+        items: [],
+        amount: 0
+      };
+    }
+    categoryMap[cat].items.push(e);
+    categoryMap[cat].amount += e.amount;
+  });
+
+  // 按金额降序排列
+  const categories = Object.values(categoryMap).sort((a, b) => b.amount - a.amount);
+
+  document.getElementById('expensesTable').innerHTML = categories.length > 0
+    ? categories.map((c, i) => {
+        const badge = i < 3 ? `<span class="rank-badge top">${i+1}</span>` : `<span class="rank-badge">${i+1}</span>`;
+        return makeExpandRows('exp'+i, [
+          badge + ' ' + c.name,
+          c.items.length + ' 项',
+          `<span class="amt">¥${c.amount.toLocaleString()}</span>`
+        ], c.items.map(e => `
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:12px">
+            <div style="flex:1">
+              <div style="color:#666">${e.date}</div>
+              <div style="margin-top:2px">${e.name}</div>
+            </div>
+            <div style="font-weight:600;color:var(--red)">¥${e.amount.toLocaleString()}</div>
+          </div>
+        `).join(''));
+      }).join('')
+    : '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:20px">暂无支出记录</td></tr>';
 }
 
 // ===== 支出明细展开/收起 =====
