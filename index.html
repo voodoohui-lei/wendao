@@ -301,7 +301,7 @@
     <div class="kpi-card purple">
       <div class="kpi-label">总营收</div>
       <div class="kpi-value" id="kpiRevenue">¥0</div>
-      <div class="kpi-sub">招生+赋能包+优惠券</div>
+      <div class="kpi-sub">招生+赋能包</div>
     </div>
   </div>
 
@@ -557,7 +557,7 @@ function render() {
   });
 
   const totalExpense = expenses.reduce((s, e) => s + e.amount, 0);
-  const revenue = recruit + fbAmt + couponAmt;  // 总营收含优惠券
+  const revenue = recruit + fbAmt;  // 总营收 = 招生 + 赋能包
   const profit = revenue - totalExpense;
 
   // 利润卡片
@@ -661,7 +661,7 @@ function render() {
   document.getElementById('dailyTable').innerHTML = data.slice().reverse().map(d => {
     const dayExp = (DB.expenses || []).filter(e => e.date === d.date).reduce((s,e) => s + e.amount, 0);
     const coupon = d.coupon_amt || 0;
-    const dayRev = d.recruit + d.fb_amt + coupon;
+    const dayRev = d.recruit + d.fb_amt;
     const dayExpenses = (DB.expenses || []).filter(e => e.date === d.date);
     const hasExpenses = dayExpenses.length > 0;
     
