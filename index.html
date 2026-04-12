@@ -731,11 +731,11 @@ function render() {
   updateTrend();
 
   // ===== 支出明细 =====
-  const allExpenses = (DB.expenses || []);
+  const filteredExpenses = filterExpenses(from, to);
   
   // 按类别分组
   const categoryMap = {};
-  allExpenses.forEach(e => {
+  filteredExpenses.forEach(e => {
     const cat = e.category || '其他';
     if (!categoryMap[cat]) {
       categoryMap[cat] = {
