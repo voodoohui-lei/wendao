@@ -357,6 +357,7 @@
       <button class="tab-btn" onclick="switchTab('coupon', this)">小店大道</button>
       <button class="tab-btn" onclick="switchTab('daily', this)">每日汇总</button>
       <button class="tab-btn" onclick="switchTab('expenses', this)">支出明细</button>
+      <button class="tab-btn" onclick="switchTab('v5', this)">V5产品业绩</button>
     </div>
     <div id="tab-recruit" class="tab-content active">
       <table class="data-table">
@@ -394,6 +395,36 @@
         <tbody id="expensesTable"></tbody>
       </table>
     </div>
+    <div id="tab-v5" class="tab-content">
+      <div style="padding:16px;">
+        <div id="v5-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="detail-card">
+            <h4 style="color:var(--red);margin-bottom:12px;">月度目标进度（万元）</h4>
+            <canvas id="v5-monthly-chart" height="200"></canvas>
+          </div>
+          <div class="detail-card">
+            <h4 style="color:var(--red);margin-bottom:12px;">二级分类TOP15</h4>
+            <div id="v5-cat2-list" style="max-height:220px;overflow-y:auto;"></div>
+          </div>
+        </div>
+        <div class="detail-card">
+          <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+            <h4 style="color:var(--red);">订单明细</h4>
+            <input type="text" id="v5-search" placeholder="搜索商品/订单..." style="padding:4px 10px;border:1px solid #333;border-radius:4px;background:#1a1a2e;color:#e0e0e0;font-size:13px;margin-left:12px;" oninput="v5Filter()">
+            <button onclick="v5Reset()" style="padding:4px 12px;background:#333;border:1px solid #444;border-radius:4px;color:#b0b0b0;cursor:pointer;font-size:12px;">重置</button>
+          </div>
+          <div id="v5-table-wrap" style="max-height:400px;overflow-y:auto;">
+            <table class="data-table">
+              <thead><tr><th>日期</th><th>订单号</th><th>商品名称</th><th>数量</th><th>折扣后价</th><th>佣金</th><th>优惠券</th><th>退款</th><th>收入</th><th>状态</th></tr></thead>
+              <tbody id="v5-table"></tbody>
+            </table>
+          </div>
+          <div id="v5-pagination" style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -805,6 +836,7 @@ function switchTab(name, btnEl) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   if (btnEl) btnEl.classList.add('active');
+  if (name === 'v5') loadV5Data();
 }
 
 // ===== 筛选 =====
@@ -940,7 +972,181 @@ async function init() {
   render();
 }
 
+// ===== V5产品业绩Tab =====
+let V5 = null;
+let v5Page = 1;
+const v5PageSize = 50;
+let v5Filtered = [];
+let v5CurrentCat2 = null;
+
+async function loadV5Data() {
+  if (V5) { renderV5(); return; }
+  try {
+    const resp = await fetch('./v5_dashboard_data.json');
+    V5 = await resp.json();
+    renderV5();
+  } catch(e) { console.error('V5数据加载失败', e); }
+}
+
+function renderV5() {
+  if (!V5) return;
+  const s = V5.summary;
+  const target = V5.targets.annual;
+  const done = s.total_income;
+  const gap = target - done;
+  const rate = (done / target * 100).toFixed(2);
+  document.getElementById('v5-kpi').innerHTML = `
+    <div class="detail-card" style="padding:14px;text-align:center;">
+      <div style="color:#888;font-size:12px;">年度目标</div>
+      <div style="font-size:22px;font-weight:bold;color:#fff;margin-top:4px;">¥${fmtY(target)}</div>
+    </div>
+    <div class="detail-card" style="padding:14px;text-align:center;">
+      <div style="color:#888;font-size:12px;">已完成</div>
+      <div style="font-size:22px;font-weight:bold;color:#81c784;margin-top:4px;">¥${fmtY(done)}</div>
+      <div style="color:#888;font-size:11px;margin-top:2px;">${rate}%</div>
+    </div>
+    <div class="detail-card" style="padding:14px;text-align:center;">
+      <div style="color:#888;font-size:12px;">年度缺口</div>
+      <div style="font-size:22px;font-weight:bold;color:${gap>0?'#ff6b6b':'#81c784'};margin-top:4px;">¥${fmtY(gap)}</div>
+    </div>
+    <div class="detail-card" style="padding:14px;text-align:center;">
+      <div style="color:#888;font-size:12px;">有效订单</div>
+      <div style="font-size:22px;font-weight:bold;color:#fff;margin-top:4px;">${s.total_orders}笔</div>
+      <div style="color:#888;font-size:11px;margin-top:2px;">有效${s.valid_orders}笔</div>
+    </div>
+  `;
+
+  renderV5MonthlyChart();
+  renderV5Cat2List();
+  v5Filtered = V5.records;
+  v5CurrentCat2 = null;
+  document.getElementById('v5-search').value = '';
+  v5Page = 1;
+  renderV5Table();
+}
+
+function renderV5MonthlyChart() {
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const targets_w = V5.targets.monthly_target.map(v => v / 10000);
+  const actuals = months.map((_, i) => {
+    const m = i + 1;
+    return V5.monthly_actual[m] ? (V5.monthly_actual[m] / 10000) : 0;
+  });
+  const ctx = document.getElementById('v5-monthly-chart');
+  if (window._v5Chart) window._v5Chart.destroy();
+  window._v5Chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [
+        { label: '目标(万)', data: targets_w, backgroundColor: 'rgba(79,195,247,0.3)', borderColor: '#4fc3f7', borderWidth: 2, borderRadius: 4 },
+        { label: '实际(万)', data: actuals, backgroundColor: actuals.map((v, i) => v >= targets_w[i] ? 'rgba(129,199,132,0.7)' : 'rgba(239,83,80,0.7)'), borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#b0bec5', font: {size: 11} } } },
+      scales: {
+        x: { ticks: { color: '#78909c' }, grid: { color: '#1e2a35' } },
+        y: { ticks: { color: '#78909c', callback: v => '¥' + v + '万' }, grid: { color: '#1e2a35' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function renderV5Cat2List() {
+  const entries = Object.entries(V5.cat2_stats).slice(0, 15);
+  const maxIncome = entries[0] ? entries[0][1].income : 1;
+  document.getElementById('v5-cat2-list').innerHTML = entries.map(([name, info]) => {
+    const pct = (info.income / maxIncome * 100).toFixed(1);
+    return `<div onclick="v5DrillCat2('${name.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;padding:4px 6px;border-radius:4px;" onmouseover="this.style.background='#243040'" onmouseout="this.style.background='transparent'">
+      <div style="width:140px;font-size:12px;color:#b0bec5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;">${name}</div>
+      <div style="flex:1;height:16px;background:#263238;border-radius:3px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#4fc3f7,#29b6f6);border-radius:3px;"></div></div>
+      <div style="width:80px;text-align:right;font-size:12px;color:#fff;flex-shrink:0;">¥${fmtY(info.income)}</div>
+    </div>`;
+  }).join('');
+}
+
+function v5DrillCat2(cat2Name) {
+  v5CurrentCat2 = cat2Name;
+  v5Filtered = V5.records.filter(r => r['二级分类'] === cat2Name);
+  document.getElementById('v5-search').value = cat2Name;
+  v5Page = 1;
+  renderV5Table();
+}
+
+function v5Filter() {
+  const q = document.getElementById('v5-search').value.trim().toLowerCase();
+  if (v5CurrentCat2) {
+    v5Filtered = V5.records.filter(r => r['二级分类'] === v5CurrentCat2);
+  } else {
+    v5Filtered = V5.records;
+  }
+  if (q) {
+    v5Filtered = v5Filtered.filter(r =>
+      (r['商品名称'] && r['商品名称'].toLowerCase().includes(q)) ||
+      (r['订单编号'] && r['订单编号'].toString().toLowerCase().includes(q))
+    );
+  }
+  v5Page = 1;
+  renderV5Table();
+}
+
+function v5Reset() {
+  v5CurrentCat2 = null;
+  v5Filtered = V5.records;
+  document.getElementById('v5-search').value = '';
+  v5Page = 1;
+  renderV5Table();
+}
+
+function renderV5Table() {
+  const start = (v5Page - 1) * v5PageSize;
+  const page = v5Filtered.slice(start, start + v5PageSize);
+  const totalPages = Math.ceil(v5Filtered.length / v5PageSize);
+
+  document.getElementById('v5-table').innerHTML = page.map(r => `
+    <tr>
+      <td>${r['日期'] || ''}</td>
+      <td style="font-size:11px;color:#607d8b">${r['订单编号'] || ''}</td>
+      <td>${r['商品名称'] || ''}</td>
+      <td>${r['数量'] || 1}</td>
+      <td>¥${r['折扣后价'] || 0}</td>
+      <td style="color:#ffb74d">¥${r['佣金'] || 0}</td>
+      <td style="color:#81c784">¥${r['优惠券'] || 0}</td>
+      <td style="color:#ef5350">¥${r['退款'] || 0}</td>
+      <td style="color:#4fc3f7;font-weight:bold">¥${r['收入'] || 0}</td>
+      <td><span style="padding:2px 6px;border-radius:10px;font-size:10px;background:${r['是否有效']==='有效'?'#1b5e20':'#b71c1c'};color:${r['是否有效']==='有效'?'#81c784':'#ef5350'}">${r['是否有效'] || ''}</span></td>
+    </tr>
+  `).join('');
+
+  // Pagination
+  let pg = '';
+  if (totalPages > 1) {
+    pg += `<button onclick="v5GoPage(${v5Page-1})" ${v5Page===1?'disabled':''} style="padding:4px 10px;background:#333;border:1px solid #444;border-radius:4px;color:#b0b0b0;cursor:pointer;">上一页</button>`;
+    pg += `<span style="color:#888;font-size:12px;">第${v5Page}/${totalPages}页 共${v5Filtered.length}条</span>`;
+    pg += `<button onclick="v5GoPage(${v5Page+1})" ${v5Page===totalPages?'disabled':''} style="padding:4px 10px;background:#333;border:1px solid #444;border-radius:4px;color:#b0b0b0;cursor:pointer;">下一页</button>`;
+  } else {
+    pg = `<span style="color:#888;font-size:12px;">共 ${v5Filtered.length} 条</span>`;
+  }
+  document.getElementById('v5-pagination').innerHTML = pg;
+}
+
+function v5GoPage(p) {
+  v5Page = p;
+  renderV5Table();
+  document.getElementById('v5-table-wrap').scrollTop = 0;
+}
+
+function fmtY(v) {
+  v = parseFloat(v) || 0;
+  if (v >= 100000000) return (v/100000000).toFixed(2) + '亿';
+  if (v >= 10000) return (v/10000).toFixed(2) + '万';
+  return v.toFixed(2);
+}
+
 init();
+
 </script>
 </body>
 </html>
