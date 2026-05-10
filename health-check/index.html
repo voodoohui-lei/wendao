@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>温道全民健康自检</title>
+<style>
+:root {
+  --primary: #E86A2C;
+  --primary-dark: #CC3D2A;
+  --gold: #D49A2A;
+  --green: #2E8B57;
+  --bg: #FFF8F0;
+  --card: #FFFFFF;
+  --text: #333333;
+  --text-light: #666666;
+  --border: #F0E0D0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 90px; }
+
+/* 封面 */
+.page { display: none; padding: 24px 20px; }
+.page.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.cover { text-align: center; padding-top: 30px; }
+.cover-logo { font-size: 30px; font-weight: bold; color: var(--primary); margin-bottom: 6px; }
+.cover-sub { font-size: 13px; color: var(--text-light); margin-bottom: 20px; }
+.cover-title { font-size: 20px; color: var(--primary-dark); margin-bottom: 6px; line-height: 1.4; }
+.cover-desc { font-size: 13px; color: var(--text-light); margin-bottom: 24px; line-height: 1.7; }
+.cover-badge { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+.badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+.b-temp { background: #FFF0E6; color: var(--primary); }
+.b-blood { background: #FFE8E8; color: var(--primary-dark); }
+.b-mer { background: #FFF8E8; color: var(--gold); }
+.b-life { background: #F0FFF0; color: var(--green); }
+
+.cover-info { background: var(--card); border-radius: 14px; padding: 16px; border: 1px solid var(--border); margin-bottom: 20px; text-align: left; }
+.cover-info p { font-size: 13px; color: var(--text-light); margin-bottom: 6px; line-height: 1.6; }
+.cover-info strong { color: var(--primary); }
+
+.btn-cover { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 15px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 12px; }
+.btn-ghost { width: 100%; background: white; color: var(--primary); border: 2px solid var(--primary); padding: 13px; border-radius: 30px; font-size: 14px; cursor: pointer; }
+
+/* 进度条 */
+.progress-bar { position: sticky; top: 0; background: white; padding: 10px 20px; border-bottom: 1px solid var(--border); z-index: 10; display: none; }
+.progress-bar.active { display: block; }
+.progress-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-light); margin-bottom: 5px; }
+.progress-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--gold)); border-radius: 3px; transition: width 0.4s ease; }
+
+/* 问题页 */
+.q-header { padding: 16px 20px 10px; }
+.dim-tag { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+.q-title { font-size: 15px; color: var(--text); margin-bottom: 3px; }
+.q-sub { font-size: 12px; color: var(--text-light); margin-bottom: 12px; }
+
+.symptom-list { padding: 0 20px; }
+.symptom-item { background: var(--card); border-radius: 12px; padding: 13px 14px; margin-bottom: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; }
+.symptom-item:active { transform: scale(0.98); }
+.symptom-item.selected { border-color: var(--primary); background: #FFF5EE; }
+.symptom-name { flex: 1; font-size: 14px; }
+.check-circle { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.symptom-item.selected .check-circle { background: var(--primary); border-color: var(--primary); color: white; font-size: 11px; }
+
+/* 底部导航 */
+.bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; padding: 10px 20px; border-top: 1px solid var(--border); display: none; gap: 10px; z-index: 20; }
+.bottom-nav.active { display: flex; }
+.btn-prev { flex: 1; background: white; color: var(--text-light); border: 1px solid var(--border); padding: 11px; border-radius: 24px; font-size: 13px; cursor: pointer; }
+.btn-next { flex: 2; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 11px; border-radius: 24px; font-size: 14px; font-weight: bold; cursor: pointer; }
+.btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 结果页 */
+.result { padding: 20px; }
+.result-top { text-align: center; margin-bottom: 20px; }
+.score-ring { width: 140px; height: 140px; border-radius: 50%; margin: 0 auto 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+.score-ring::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: var(--bg); }
+.score-inner { position: relative; z-index: 1; }
+.score-grade { font-size: 52px; font-weight: bold; color: white; line-height: 1; }
+.score-label { font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 2px; }
+.score-title { font-size: 17px; color: var(--primary-dark); margin-bottom: 4px; }
+.score-sub { font-size: 12px; color: var(--text-light); }
+
+/* 四维卡片 */
+.dim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.dim-card { background: var(--card); border-radius: 12px; padding: 13px; border: 1px solid var(--border); }
+.dim-card-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+.dim-name { font-size: 13px; font-weight: bold; }
+.dim-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.b-green { background: #E8F5E9; color: var(--green); }
+.b-yellow { background: #FFF8E0; color: var(--gold); }
+.b-red { background: #FFE8E8; color: var(--primary-dark); }
+.b-grey { background: #F5F5F5; color: var(--text-light); }
+.dim-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 5px; }
+.dim-bar-fill { height: 100%; border-radius: 3px; }
+.bar-temp { background: var(--primary); }
+.bar-blood { background: var(--primary-dark); }
+.bar-mer { background: var(--gold); }
+.bar-life { background: var(--green); }
+.dim-tip { font-size: 11px; color: var(--text-light); line-height: 1.5; }
+.dim-count { font-size: 11px; color: var(--text-light); }
+
+/* AI解读 */
+.ai-card { background: linear-gradient(135deg, #FFF5EE, #FFF8F0); border-radius: 14px; padding: 16px; border: 1px solid var(--primary); margin-bottom: 16px; }
+.ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ai-icon { font-size: 18px; }
+.ai-title { font-size: 14px; font-weight: bold; color: var(--primary); }
+.ai-body { font-size: 13px; color: var(--text); line-height: 1.8; white-space: pre-wrap; }
+.ai-loading { font-size: 13px; color: var(--text-light); text-align: center; padding: 20px; }
+.dot-anim { display: inline-block; }
+.dot-anim::after { content: '...'; animation: dots 1.5s infinite; }
+@keyframes dots { 0%,20%{content:'.'} 40%{content:'..'} 60%,100%{content:'...'} }
+
+.product-section { margin-bottom: 16px; }
+.section-hd { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.section-title { font-size: 14px; font-weight: bold; color: var(--primary); }
+.product-item { background: var(--card); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.prod-icon { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.prod-info { flex: 1; }
+.prod-name { font-size: 13px; font-weight: bold; margin-bottom: 2px; }
+.prod-desc { font-size: 12px; color: var(--text-light); }
+.prod-tag { font-size: 10px; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+
+/* 行动按钮 */
+.action-btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--gold)); color: white; border: none; padding: 13px; border-radius: 28px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+.action-ghost { width: 100%; background: white; color: var(--primary); border: 2px solid var(--primary); padding: 11px; border-radius: 28px; font-size: 13px; cursor: pointer; }
+.motto { text-align: center; font-size: 12px; color: var(--text-light); line-height: 1.8; margin-top: 16px; }
+.tip-box { background: #FFF5EE; border: 1px solid var(--primary); border-radius: 12px; padding: 12px; margin-bottom: 14px; font-size: 12px; color: var(--text); text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- ========== 封面 ========== -->
+<div class="page active" id="p-cover">
+  <div class="cover">
+    <div class="cover-logo">温道</div>
+    <div class="cover-sub">全民健康自检系统 · 身体的语言</div>
+    <div class="cover-title">四维健康深度评估<br>温度 · 气血 · 经络 · 思通</div>
+    <div class="cover-desc">中医温养居家化 · 三分调七分养<br>让每个家庭都有一个懂健康的人</div>
+    <div class="cover-badge">
+      <span class="badge b-temp">🌡️ 温度</span>
+      <span class="badge b-blood">🔴 气血</span>
+      <span class="badge b-mer">🔗 经络</span>
+      <span class="badge b-life">🧠 思通</span>
+    </div>
+    <div class="cover-info">
+      <p><strong>填写说明：</strong></p>
+      <p>本系统从<strong>四个维度</strong>评估您的健康状态：</p>
+      <p>🌡️ <strong>温度</strong> — 阳气是否充足，怕冷/手脚凉等</p>
+      <p>🔴 <strong>气血</strong> — 精力面色，失眠/疲劳等</p>
+      <p>🔗 <strong>经络</strong> — 通道是否通畅，酸麻胀痛等</p>
+      <p>🧠 <strong>思通</strong> — 生活习惯是否有损健康</p>
+      <p>如有该症状请点击选中，完成后获得个性化调理方案。</p>
+    </div>
+    <button class="btn-cover" onclick="startCheck()">开始四维评估 →</button>
+    <button class="btn-ghost" onclick="showDemo()">查看示例报告</button>
+  </div>
+</div>
+
+<!-- ========== 问题页 ========== -->
+<div class="page" id="p-check">
+  <div class="progress-bar active" id="progressBar">
+    <div class="progress-top">
+      <span id="dimLabel">温度维度</span>
+      <span id="progText">0/34</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+  <div class="q-header">
+    <div class="dim-tag" id="dimTag">温度维度</div>
+    <div class="q-title" id="qTitle">请选择您近3个月有的症状</div>
+    <div class="q-sub" id="qSub">多选，选中即表示有此症状</div>
+  </div>
+  <div class="symptom-list" id="symList"></div>
+</div>
+
+<!-- ========== 结果页 ========== -->
+<div class="page" id="p-result">
+  <div class="result">
+    <div class="result-top">
+      <div class="score-ring" id="scoreRing">
+        <div class="score-inner">
+          <div class="score-grade" id="resGrade">B</div>
+          <div class="score-label" id="resLabel">亚健康</div>
+        </div>
+      </div>
+      <div class="score-title" id="resTitle">您的健康需要关注</div>
+      <div class="score-sub" id="resSub">温度·气血·经络·思通 四维分析</div>
+    </div>
+
+    <!-- 四维卡片 -->
+    <div class="dim-grid" id="dimGrid"></div>
+
+    <!-- AI解读 -->
+    <div class="ai-card" id="aiCard">
+      <div class="ai-header">
+        <span class="ai-icon">🧠</span>
+        <span class="ai-title">AI健康解读</span>
+      </div>
+      <div class="ai-body" id="aiBody">
+        <span class="ai-loading">正在生成个性化解读<strong class="dot-anim"></strong></span>
+      </div>
+    </div>
+
+    <!-- 推荐产品 -->
+    <div class="product-section" id="prodSection"></div>
+
+    <div class="tip-box" id="shareTip">👆 长按或截图保存报告<br>分享给家人朋友，一起关注健康</div>
+
+    <button class="action-btn" onclick="window.open('https://mp.weixin.qq.com','_blank')">扫码关注温道公众号 →</button>
+    <button class="action-ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ 重新测评</button>
+
+    <div class="motto">
+      温道使命：共建千万个健康幸福型家庭<br>
+      三分调七分养 · 中医温养居家化
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 症状数据 ====================
+const DIMS = [
+  {
+    key: 'temp', name: '温度', emoji: '🌡️',
+    color: '#E86A2C', barClass: 'bar-temp', tagClass: 'b-temp',
+    intro: '阳气是否充足，身体温暖与否',
+    items: [
+      '怕冷','手脚凉','手脚热','头部怕冷','胃凉','腰凉','后背凉','颈凉',
+      '经期小腹怕凉（女）','易感冒','感冒时间长','不感冒（免疫力差）',
+      '低热37-38度','过敏性鼻炎','打喷嚏','鼻塞','流鼻水',
+      '自汗（无故出汗）','多汗','盗汗（夜间出汗）','冒冷汗','不出汗',
+      '手脚出汗','手脚胀','手脚抽搐','手脚抖','冻疮',
+      '哮喘','咳嗽','痰多','痰白/凉','过敏','晕车','晕机'
+    ]
+  },
+  {
+    key: 'blood', name: '气血', emoji: '🔴',
+    color: '#CC3D2A', barClass: 'bar-blood', tagClass: 'b-blood',
+    intro: '精力面色，造血功能状态',
+    items: [
+      '面黄','面白','面黑','面颊泛红','唇白','唇青','唇麻','唇裂',
+      '头发稀少','头发干枯','脱发','白发','眉毛脱落','睫毛脱落',
+      '失眠','多梦','易醒','嗜睡','健忘','反应迟钝',
+      '无激情','抑郁症','疲倦乏力','易打哈欠',
+      '低血压','低血糖','贫血','心慌','心跳快','心跳慢',
+      '心律失常','胸闷','胸痛','气短','叹气',
+      '指甲易断','手指倒刺','指甲凹陷','指甲竖纹','半月痕少/无',
+      '体重突增/突减','形体消瘦','肥胖',
+      '月经量少/有块（女）','月经量多（女）','月经色暗（女）','痛经（女）',
+      '头晕','脑鸣','头麻','性欲低','甲亢','甲低'
+    ]
+  },
+  {
+    key: 'meridian', name: '经络', emoji: '🔗',
+    color: '#D49A2A', barClass: 'bar-mer', tagClass: 'b-mer',
+    intro: '身体通道是否通畅',
+    items: [
+      '头疼','偏头痛','肩酸','肩痛','肩麻','脖子硬','易落枕',
+      '颈疼痛','腰酸痛','脊椎僵硬','脊椎疼痛','游走性疼痛',
+      '关节痛','关节肿','脚后跟疼','静脉曲张',
+      '眼干涩','眼胀','眼痛','眼痒','视力模糊','眼疲劳',
+      '眼圈黑','眼圈浮肿','耳鸣','耳内潮湿','听力下降',
+      '鼻炎','打鼾','嗅觉不灵',
+      '口苦','口干','口臭','口溃疡','舌苔厚','舌苔黄',
+      '咽干','喉痒','喉痛','声音嘶哑',
+      '胃痛','胃胀','打嗝','恶心','消化不良','食欲差','腹胀','屁多',
+      '便秘','大便不成形','便溏不净',
+      '皮肤痒','皮肤干燥','湿疹','后背痘','痤疮',
+      '尿频','尿急','尿不净','起夜',
+      '心烦狂躁','性情急','易怒',
+      '痔疮','便血'
+    ]
+  },
+  {
+    key: 'life', name: '思通', emoji: '🧠',
+    color: '#2E8B57', barClass: 'bar-life', tagClass: 'b-life',
+    intro: '生活习惯是否有损健康认知',
+    items: [
+      '经常熬夜（晚于11点睡）','睡眠不足6小时','很少运动',
+      '久坐不动（每天超过6小时）','长期吹空调',
+      '喜喝冷饮/冰水','爱吃生冷食物','饮食不规律',
+      '早餐不吃或敷衍','晚餐过饱或过晚',
+      '压力大/焦虑/易怒','情绪低落/闷闷不乐',
+      '不晒太阳（长期室内）','不注意保暖（贪凉）',
+      '不重视身体健康（等生病了再说）',
+      '从未系统学习过健康知识',
+      '家人有慢性病/亚健康问题',
+      'BMI偏高（偏胖）','吸烟或过量饮酒'
+    ]
+  }
+];
+
+// ==================== 状态 ====================
+let state = { dim: 0, sel: {} };
+DIMS.forEach(d => state.sel[d.key] = new Set());
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('p-' + id).classList.add('active');
+}
+
+function startCheck() {
+  state.dim = 0;
+  DIMS.forEach(d => state.sel[d.key] = new Set());
+  renderDim();
+  showPage('check');
+}
+
+function renderDim() {
+  const d = DIMS[state.dim];
+  const sel = state.sel[d.key];
+  const pct = sel.size / d.items.length;
+
+  document.getElementById('dimTag').textContent = d.emoji + ' ' + d.name + '维度';
+  document.getElementById('dimTag').className = 'dim-tag ' + d.tagClass;
+  document.getElementById('dimLabel').textContent = d.emoji + ' ' + d.name;
+  document.getElementById('progText').textContent = sel.size + '/' + d.items.length;
+  document.getElementById('progFill').style.width = (pct * 100) + '%';
+  document.getElementById('qTitle').textContent = d.intro;
+  document.getElementById('qSub').textContent = '第 ' + (state.dim + 1) + ' / ' + DIMS.length + ' 组';
+
+  const list = document.getElementById('symList');
+  list.innerHTML = '';
+  d.items.forEach((name, i) => {
+    const el = document.createElement('div');
+    const isSelected = sel.has(i);
+    el.className = 'symptom-item' + (isSelected ? ' selected' : '');
+    el.innerHTML = '<span class="check-circle">' + (isSelected ? '✓' : '') + '</span><span class="symptom-name">' + name + '</span>';
+    el.onclick = () => toggle(d.key, i, el, d);
+    list.appendChild(el);
+  });
+
+  const nav = document.getElementById('bottomNav');
+  nav.classList.add('active');
+  const prevBtn = document.getElementById('btnPrev');
+  prevBtn.style.display = state.dim > 0 ? 'block' : 'none';
+  const nextBtn = document.getElementById('btnNext');
+  if (state.dim === DIMS.length - 1) {
+    nextBtn.textContent = '生成报告 →';
+    nextBtn.disabled = totalSel() === 0;
+  } else {
+    nextBtn.textContent = '下一维度 →';
+    nextBtn.disabled = false;
+  }
+}
+
+function toggle(key, idx, el, dim) {
+  const sel = state.sel[key];
+  if (sel.has(idx)) { sel.delete(idx); el.classList.remove('selected'); el.querySelector('.check-circle').textContent = ''; }
+  else { sel.add(idx); el.classList.add('selected'); el.querySelector('.check-circle').textContent = '✓'; }
+  document.getElementById('progText').textContent = sel.size + '/' + dim.items.length;
+  document.getElementById('progFill').style.width = (sel.size / dim.items.length * 100) + '%';
+  if (state.dim === DIMS.length - 1) document.getElementById('btnNext').disabled = totalSel() === 0;
+}
+
+function totalSel() { return DIMS.reduce((s, d) => s + state.sel[d.key].size, 0); }
+
+function nextDim() {
+  if (state.dim < DIMS.length - 1) { state.dim++; renderDim(); }
+  else showResult();
+}
+
+function prevDim() {
+  if (state.dim > 0) { state.dim--; renderDim(); }
+}
+
+// ==================== 结果页 ====================
+function showResult() {
+  const scores = {};
+  DIMS.forEach(d => { scores[d.key] = state.sel[d.key].size; });
+  const total = totalSel();
+  const maxTotal = DIMS.reduce((s, d) => s + d.items.length, 0);
+  const pct = total / maxTotal;
+
+  let grade, label, color;
+  if (pct < 0.15) { grade = 'A'; label = '健康'; color = '#2E8B57'; }
+  else if (pct < 0.3) { grade = 'B'; label = '亚健康'; color = '#D49A2A'; }
+  else if (pct < 0.5) { grade = 'C'; label = '需关注'; color = '#E86A2C'; }
+  else { grade = 'D'; label = '需调理'; color = '#CC3D2A'; }
+
+  const ring = document.getElementById('scoreRing');
+  ring.style.background = `linear-gradient(135deg, ${color}, ${color}88`;
+  document.getElementById('resGrade').textContent = grade;
+  document.getElementById('resGrade').style.color = 'white';
+  document.getElementById('resLabel').textContent = label;
+  document.getElementById('resTitle').textContent =
+    grade === 'A' ? '您的健康状态良好' :
+    grade === 'B' ? '您的健康需要关注' :
+    grade === 'C' ? '您的身体在发出信号' : '您的健康需要及时调理';
+  document.getElementById('resSub').textContent = '温度·气血·经络·思通 四维评估';
+
+  // 四维卡片
+  const grid = document.getElementById('dimGrid');
+  grid.innerHTML = '';
+  DIMS.forEach(d => {
+    const cnt = scores[d.key];
+    const total2 = d.items.length;
+    const p = cnt / total2;
+    const level = p < 0.2 ? { text: '良好', cls: 'b-green' } : p < 0.4 ? { text: '一般', cls: 'b-yellow' } : p < 0.6 ? { text: '偏多', cls: 'b-red' } : { text: '严重', cls: 'b-red' };
+    let advice = '';
+    if (d.key === 'temp') {
+      if (cnt < 5) advice = '阳气充足，继续保持';
+      else if (cnt < 15) advice = '阳气偏弱，推荐内外热源调理';
+      else advice = '阳气不足，内外热源双管齐下';
+    } else if (d.key === 'blood') {
+      if (cnt < 5) advice = '气血充盈，精力充沛';
+      else if (cnt < 15) advice = '气血偏虚，建议热能轻畅汤';
+      else advice = '气血两虚，系统调理刻不容缓';
+    } else if (d.key === 'meridian') {
+      if (cnt < 5) advice = '经络通畅，身体灵活';
+      else if (cnt < 15) advice = '部分经络不畅，用孝顺锤+姜汁疏通';
+      else advice = '经络瘀堵明显，用孝顺锤配合姜膏每天拍打';
+    } else {
+      if (cnt < 5) advice = '生活习惯良好，继续保持';
+      else if (cnt < 10) advice = '有些生活习惯需要调整';
+      else advice = '生活习惯问题较多，建议先学家调';
+    }
+    grid.innerHTML += `
+      <div class="dim-card">
+        <div class="dim-card-hd">
+          <span class="dim-name" style="color:${d.color}">${d.emoji} ${d.name}</span>
+          <span class="dim-badge ${level.cls}">${level.text}</span>
+        </div>
+        <div class="dim-bar"><div class="dim-bar-fill ${d.barClass}" style="width:${p*100}%"></div></div>
+        <div class="dim-count">${cnt}项 / ${total2}项</div>
+        <div class="dim-tip">${advice}</div>
+      </div>`;
+  });
+
+  // AI解读（模拟 + 真实逻辑）
+  generateAI解读(scores);
+
+  // 推荐产品
+  renderProducts(scores);
+
+  showPage('result');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ==================== 产品推荐引擎 ====================
+function renderProducts(sc) {
+  const section = document.getElementById('prodSection');
+  const items = [];
+
+  // 温度 → 内外热源
+  if (sc.temp >= 3) {
+    items.push({ cat: '🌡️ 温度调理', list: [] });
+    if (sc.temp >= 5) {
+      items[0].list.push(
+        { name: '元气正阳床垫', desc: '铺在床上整晚全身温敷，不能单独敷局部', icon: '🛏️', tag: '全身温敷', tagCls: 'b-red' },
+        { name: '热能轻畅汤（排毒汤）', desc: '排肠道垃圾、清宿便，补肾气', icon: '🍵', tag: '内热源', tagCls: 'b-red' }
+      );
+    }
+    if (sc.temp >= 3) {
+      items[0].list.push(
+        { name: '元气多用毯', desc: '单独敷某个部位（肩颈、腰、膝等）', icon: '🧣', tag: '局部温敷', tagCls: 'b-yellow' },
+        { name: '姜汁/姜枣茶', desc: '内服补充热源，姜汁、姜粉、姜片熬姜枣茶喝', icon: '🍵', tag: '内热源', tagCls: 'b-green' }
+      );
+    }
+  }
+
+  // 气血 → 热能轻畅汤
+  if (sc.blood >= 3) {
+    items.push({ cat: '🔴 气血调理', list: [] });
+    if (sc.blood >= 5) {
+      items[items.length-1].list.push(
+        { name: '热能轻畅汤（排毒汤）', desc: '排肠道垃圾、清宿便，同时补肾气', icon: '💊', tag: '核心产品', tagCls: 'b-red' }
+      );
+    }
+  }
+
+  // 经络 → 居家疏通（孝顺锤+姜膏外用，或学家调课程，或到门店）
+  if (sc.meridian >= 3) {
+    items.push({ cat: '🔗 经络疏通', list: [] });
+    if (sc.meridian >= 10) {
+      items[items.length-1].list.push(
+        { name: '孝顺锤', desc: '配合姜膏（外用）拍打不通的经络部位', icon: '🔨', tag: '居家必备', tagCls: 'b-red' },
+        { name: '姜膏（外用）', desc: '涂在不通的经络部位再拍打，增强效果', icon: '🧴', tag: '配合使用', tagCls: 'b-yellow' }
+      );
+    }
+    if (sc.meridian >= 5) {
+      items[items.length-1].list.push(
+        { name: '家庭调理师课程（3天）', desc: '学习居家疏通术，让家人帮忙疏通', icon: '🎓', tag: '推荐学习', tagCls: 'b-green' },
+        { name: '到门店疏通', desc: '找温道专业技师疏通经络', icon: '🏪', tag: '门店服务', tagCls: 'b-yellow' }
+      );
+    } else {
+      items[items.length-1].list.push(
+        { name: '孝顺锤 + 姜膏（外用）', desc: '居家经络自我疏通，简单有效', icon: '🔨', tag: '居家推荐', tagCls: 'b-green' }
+      );
+    }
+  }
+
+  // 思通 → 课程学习
+  if (sc.life >= 3) {
+    items.push({ cat: '🧠 思通学习', list: [] });
+    items[items.length-1].list.push(
+      { name: '家庭调理师课程（3天）', desc: '系统学健康理念，纠正生活习惯', icon: '🎓', tag: '强烈推荐', tagCls: 'b-red' }
+    );
+    if (sc.life >= 5) {
+      items[items.length-1].list.push(
+        { name: '思通课程（温道核心理论）', desc: '先想通，再调理，事半功倍', icon: '🧠', tag: '先学后调', tagCls: 'b-yellow' }
+      );
+    }
+  }
+
+  // 综合兜底
+  if (items.length === 0) {
+    items.push({ cat: '🛡️ 日常温养', list: [
+      { name: '元气正阳床垫', desc: '日常温养，维护健康状态', icon: '🛏️', tag: '日常维护', tagCls: 'b-green' },
+      { name: '家庭调理师课程', desc: '系统学习，为家人保驾护航', icon: '🎓', tag: '推荐学习', tagCls: 'b-yellow' }
+    ]});
+  }
+
+  // 渲染
+  section.innerHTML = '';
+  items.forEach(cat => {
+    section.innerHTML += `<div class="section-hd"><span class="section-title">${cat.cat}</span></div>`;
+    cat.list.forEach(p => {
+      section.innerHTML += `
+        <div class="product-item">
+          <div class="prod-icon" style="background:${DIMS.find(d=>d.key==='temp').color}15">${p.icon}</div>
+          <div class="prod-info">
+            <div class="prod-name">${p.name}</div>
+            <div class="prod-desc">${p.desc}</div>
+          </div>
+          <span class="prod-tag ${p.tagCls}">${p.tag}</span>
+        </div>`;
+    });
+  });
+}
+
+// ==================== AI解读（调用本地DeepSeek后端）====================
+function getSelectedNames() {
+  const result = {};
+  DIMS.forEach(d => {
+    const sel = state.sel[d.key];
+    result[d.key] = [];
+    sel.forEach(idx => result[d.key].push(d.items[idx]));
+  });
+  return result;
+}
+
+function generateAI解读(scores) {
+  const body = document.getElementById('aiBody');
+  const selected = getSelectedNames();
+  const total = Object.values(scores).reduce((a, b) => a + b, 0);
+  if (total === 0) {
+    body.textContent = '非常棒！您的各项指标都很好，身体状态相当不错。继续保持现在的良好生活习惯，适当运动、规律作息，您的健康之路走得很稳！温道建议：定期做健康自检，关注身体变化，让家人也一起来做。';
+    return;
+  }
+
+  body.innerHTML = '<span class="ai-loading">正在生成健康分析报告<strong class="dot-anim"></strong></span>';
+
+  fetch('http://127.0.0.1:8899/analyze', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scores: scores, selected: selected })
+  })
+  .then(r => r.json())
+  .then(data => {
+    body.textContent = data.success ? data.text : buildLocalReport(scores, selected);
+  })
+  .catch(() => {
+    body.textContent = buildLocalReport(scores, selected);
+  });
+}
+
+function buildLocalReport(scores, selected) {
+  const t = scores.temp || 0, b = scores.blood || 0, m = scores.meridian || 0, l = scores.life || 0;
+  const lines = [];
+  const top = Object.entries({temp:t, blood:b, meridian:m, life:l}).sort((a,b)=>b[1]-a[1])[0];
+  const topName = {temp:'阳气', blood:'气血', meridian:'经络', life:'生活习惯'}[top[0]];
+  lines.push('根据您的自检结果，目前健康的主要短板在【' + topName + '】方面，涉及' + top[1] + '项相关症状。不过不用担心，发现问题就是解决问题的第一步。\n');
+  if (t >= 3) {
+    lines.push('🌡️ 温度方面（' + t + '项）：您有明显的阳气不足表现，身体偏寒、怕冷。调理的核心是"内外热源双管齐下"——外热源用元气正阳床垫铺床上整晚全身温敷（不能敷局部），局部需要温敷的地方用元气多用毯。内热源用姜汁/姜粉/姜片熬姜枣茶喝，每天早上一碗。');
+  }
+  if (b >= 3) {
+    lines.push('\n🔴 气血方面（' + b + '项）：您的精力和面色反映出气血问题。建议喝热能轻畅汤（排毒汤），它能排肠道垃圾、清宿便，同时补肾气，从根本上改善气血。');
+  }
+  if (m >= 3) {
+    lines.push('\n🔗 经络方面（' + m + '项）：');
+    const merParts = [];
+    if (selected.meridian) {
+      if (selected.meridian.some(s => s.includes('肩')||s.includes('颈')||s.includes('脖'))) merParts.push('肩颈部');
+      if (selected.meridian.some(s => s.includes('腰')||s.includes('背'))) merParts.push('腰背部');
+      if (selected.meridian.some(s => s.includes('头')||s.includes('眼')||s.includes('耳')||s.includes('鼻'))) merParts.push('头面部');
+      if (selected.meridian.some(s => s.includes('胃')||s.includes('腹')||s.includes('消化')||s.includes('便秘'))) merParts.push('腹部');
+      if (selected.meridian.some(s => s.includes('腿')||s.includes('脚')||s.includes('膝')||s.includes('关节'))) merParts.push('腿部');
+    }
+    if (merParts.length > 0) {
+      lines.push('您的经络不通主要集中在' + merParts.join('、') + '。');
+    }
+    lines.push('推荐用孝顺锤配合姜膏（外用）拍打不通的部位进行自我疏通。如果想系统学习，可以参加家庭调理师3天课程，学习居家疏通术，让家人帮忙疏通。也可以到温道门店找专业技师疏通。');
+  }
+  if (l >= 3) {
+    lines.push('\n🧠 生活习惯（' + l + '项）：这是最需要重视的问题——不良生活习惯是健康的根本"元凶"。熬夜、久坐、冷饮、吹空调，这些习惯一天不改，调理效果就大打折扣。建议参加家庭调理师3天课程，系统学习健康理念，把观念彻底改过来。');
+  }
+  lines.push('\n调理优先级建议：');
+  if (l >= 4) lines.push('① 先学家庭调理师课程，把健康观念搞清楚');
+  else if (t >= 8) lines.push('① 外热源（正阳床垫整晚温敷）+内热源（姜枣茶），温度问题最紧迫');
+  else if (b >= 8) lines.push('① 热能轻畅汤坚持喝，排肠道垃圾补肾气');
+  else if (m >= 8) lines.push('① 用孝顺锤+姜膏拍打不通的经络部位');
+  else lines.push('① 从每天喝姜枣茶+温敷开始，简单有效');
+  lines.push('\n记住温道的核心理念：三分调七分养。日常养护靠自己，身体是自己的，从今天开始改变，永远不晚。');
+  return lines.join('\n');
+}
+
+// ==================== 示例 ====================
+function showDemo() {
+  state.sel = {
+    temp: new Set([1,2,4,10,14,18,19,23,28,29,30,31]),
+    blood: new Set([35,39,43,45,50,53,54,58,59,61,62,68,70,72,74,75,81,82,84,86,87,88]),
+    meridian: new Set([92,94,97,100,101,104,106,109,116,117,118,132,133,134,138,139,142,144,153,156,158,160,161,165,167,170,172,173,175,181,182,183,184,185,186,187,188,189,190,191,192,193]),
+    life: new Set([0,1,2,3,5,9,11,12,13,14])
+  };
+  showResult();
+}
+</script>
+
+<!-- 底部导航 -->
+<div class="bottom-nav" id="bottomNav">
+  <button class="btn-prev" id="btnPrev" onclick="prevDim()">← 上一维度</button>
+  <button class="btn-next" id="btnNext" onclick="nextDim()">下一维度 →</button>
+</div>
+
+</body>
+</html>
