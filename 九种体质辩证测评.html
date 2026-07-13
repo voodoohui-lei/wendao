@@ -178,6 +178,34 @@
             margin-bottom: 0;
         }
 
+        /* 出生年/月 分开选择 */
+        .birth-selects {
+            display: flex;
+            gap: 8px;
+        }
+        .birth-selects select {
+            width: auto;
+            flex: 1;
+            padding: 12px 10px;
+            border: 1.5px solid #e8ddd0;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #3d2c1e;
+            background: #fcf8f4;
+            transition: border-color 0.2s;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            text-align: center;
+        }
+        .birth-selects #userBirthYear {
+            flex: 1.4;
+        }
+        .birth-selects select:focus {
+            border-color: #8b5a3c;
+            box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.08);
+        }
+
         /* ===== 开始按钮 ===== */
         .btn-start {
             width: 100%;
@@ -729,8 +757,11 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>出生日期 <span class="required">*</span></label>
-                        <input type="date" id="userBirth">
+                        <label>出生年月 <span class="required">*</span></label>
+                        <div class="birth-selects">
+                            <select id="userBirthYear"><option value="">年</option></select>
+                            <select id="userBirthMonth"><option value="">月</option></select>
+                        </div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -1035,7 +1066,7 @@
         const resultWrap = $('resultWrap');
 
         // 个人资料字段
-        const profileFields = ['userName', 'userGender', 'userBirth', 'userHeight', 'userWeight', 'userWaist', 'userHistory'];
+        const profileFields = ['userName', 'userGender', 'userBirthYear', 'userBirthMonth', 'userHeight', 'userWeight', 'userWaist', 'userHistory'];
 
         // ================================================================
         //  3. 初始化
@@ -1045,7 +1076,28 @@
             v2025.addEventListener('click', () => selectVersion('2025'));
             startBtn.addEventListener('click', startQuiz);
             prevBtn.addEventListener('click', goPrev);
+            populateBirthSelectors();
             selectVersion('2009');
+        }
+
+        // 填充出生年 / 月 下拉框（年、月分开选择）
+        function populateBirthSelectors() {
+            const ySel = $('userBirthYear');
+            const mSel = $('userBirthMonth');
+            if (!ySel || !mSel) return;
+            const curYear = new Date().getFullYear();
+            for (let y = curYear; y >= curYear - 100; y--) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y + ' 年';
+                ySel.appendChild(opt);
+            }
+            for (let m = 1; m <= 12; m++) {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m + ' 月';
+                mSel.appendChild(opt);
+            }
         }
 
         function selectVersion(v) {
@@ -1064,7 +1116,9 @@
             let valid = true;
             const name = $('userName').value.trim();
             const gender = $('userGender').value;
-            const birth = $('userBirth').value;
+            const birthYear = $('userBirthYear').value;
+            const birthMonth = $('userBirthMonth').value;
+            const birth = (birthYear && birthMonth) ? `${birthYear}-${String(birthMonth).padStart(2, '0')}` : '';
             const height = $('userHeight').value.trim();
             const weight = $('userWeight').value.trim();
             const waist = $('userWaist').value.trim();
@@ -1077,8 +1131,8 @@
                 $('userGender').focus();
                 alert('请选择性别'); return; }
             if (!birth) { valid = false;
-                $('userBirth').focus();
-                alert('请选择出生日期'); return; }
+                $('userBirthYear').focus();
+                alert('请选择出生年、月'); return; }
             if (!height || isNaN(height) || Number(height) < 20) { valid = false;
                 $('userHeight').focus();
                 alert('请填写有效身高（cm）'); return; }
@@ -1353,14 +1407,15 @@
             const final = determineFinalType(results);
             const p = state.profile;
 
-            // 计算年龄
+            // 计算年龄（按出生年、月，忽略具体日）
             let age = '--';
-            if (p.birth) {
-                const birthDate = new Date(p.birth);
+            if (p.birth && /^\d{4}-\d{1,2}$/.test(p.birth)) {
+                const parts = p.birth.split('-');
+                const by = parseInt(parts[0], 10);
+                const bm = parseInt(parts[1], 10);
                 const today = new Date();
-                age = today.getFullYear() - birthDate.getFullYear();
-                const m = today.getMonth() - birthDate.getMonth();
-                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                age = today.getFullYear() - by;
+                if (today.getMonth() + 1 < bm) age--;
                 if (age < 0) age = '--';
             }
 
