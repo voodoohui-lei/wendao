@@ -50,6 +50,13 @@
             box-shadow: 0 2px 12px rgba(139, 90, 60, 0.10);
             transition: transform 0.3s ease;
         }
+        .brand .brand-name {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            color: #8b5a3c;
+            margin: 0 0 6px;
+        }
         .brand h1 {
             font-size: 22px;
             font-weight: 700;
@@ -623,6 +630,15 @@
         .result-actions .btn-switch:active {
             transform: scale(0.97);
         }
+        .result-actions .btn-share {
+            background: linear-gradient(135deg, #8b5a3c, #5d3a24);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(139, 90, 60, 0.22);
+        }
+        .result-actions .btn-share:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(139, 90, 60, 0.22);
+        }
 
         /* ===== 免责 ===== */
         .disclaimer {
@@ -728,6 +744,7 @@
         <!-- 品牌 -->
         <div class="brand">
             <img class="logo" src="" alt="温道健康" id="brandLogo">
+            <div class="brand-name">温道健康</div>
             <h1>九体质 · 辨体测评</h1>
             <div class="sub">中医体质分类与判定标准</div>
             <div class="badge">亚健康 · 养生调养参考</div>
@@ -1500,12 +1517,15 @@
                     </div>
 
                     <div class="result-actions">
+                        <button class="btn-share" onclick="shareResult()">📤 分享我的体质报告</button>
                         <button class="btn-retest" onclick="restart()">🔄 重新测评</button>
                         <button class="btn-switch" onclick="switchVersion()">📋 切换版本</button>
                     </div>
                 </div>
             `;
 
+            state.resultType = final.type;
+            state.resultStatus = final.status;
             resultWrap.innerHTML = html;
             quizPage.classList.add('hidden');
             resultPage.classList.remove('hidden');
@@ -1533,6 +1553,61 @@
             quizPage.classList.add('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
+
+        // 分享结果
+        window.shareResult = function() {
+            const url = location.href.split('#')[0];
+            const type = state.resultType || '九种体质';
+            const name = (state.profile && state.profile.name) || '我';
+            const text = `【温道健康 · 九体质辨体测评】${name} 的体质倾向：${type}。快来测测你的体质吧 → ${url}`;
+            if (navigator.share) {
+                navigator.share({ title: '温道健康 · 九体质辨体测评', text: text, url: url })
+                    .catch(() => {});
+                return;
+            }
+            copyToClipboard(url).then((ok) => {
+                showToast(ok ? '链接已复制，去微信 / QQ 粘贴给好友吧 🎉' : '复制失败，请手动复制地址栏链接');
+            });
+        };
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text).then(() => true).catch(() => fallbackCopy(text));
+            }
+            return Promise.resolve(fallbackCopy(text));
+        }
+        function fallbackCopy(text) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                return ok;
+            } catch (e) {
+                return false;
+            }
+        }
+        function showToast(msg) {
+            let t = document.getElementById('uiToast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'uiToast';
+                t.style.cssText = 'position:fixed;left:50%;bottom:42px;transform:translateX(-50%);background:rgba(61,44,30,.92);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;max-width:82%;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.2);';
+                document.body.appendChild(t);
+            }
+            t.textContent = msg;
+            t.style.opacity = '1';
+            t.style.transform = 'translateX(-50%) translateY(-6px)';
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateX(-50%)';
+            }, 2400);
+        }
 
         // ================================================================
         //  12. 键盘支持
