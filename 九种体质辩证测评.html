@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>九种体质辩证测评</title>
+    <style>
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5efe8;
+            color: #3d2c1e;
+            min-height: 100vh;
+            padding: 0 0 40px;
+        }
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 16px 16px 30px;
+        }
+        .card {
+            background: #fffcf8;
+            border-radius: 24px;
+            padding: 24px 20px;
+            box-shadow: 0 4px 20px rgba(120, 80, 50, 0.08);
+            border: 1px solid rgba(200, 170, 140, 0.20);
+        }
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== 品牌 ===== */
+        .brand {
+            text-align: center;
+            padding: 14px 0 10px;
+        }
+        .brand h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, #8b5a3c, #5d3a24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .brand .sub {
+            font-size: 13px;
+            color: #a0806a;
+            letter-spacing: 2px;
+            margin-top: 2px;
+            font-weight: 300;
+        }
+        .brand .badge {
+            display: inline-block;
+            background: #e8d5c4;
+            color: #6a4a34;
+            font-size: 11px;
+            padding: 4px 14px;
+            border-radius: 30px;
+            margin-top: 4px;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        /* ===== 版本选择 ===== */
+        .version-select .v-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .version-select .v-btn {
+            padding: 16px 12px;
+            border-radius: 16px;
+            border: 2px solid #e0d0c0;
+            background: #fffcf8;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-size: 14px;
+            font-weight: 600;
+            color: #5d3a24;
+            line-height: 1.5;
+        }
+        .version-select .v-btn .tag {
+            display: block;
+            font-size: 11px;
+            font-weight: 400;
+            color: #a0806a;
+            margin-top: 2px;
+        }
+        .version-select .v-btn .count {
+            display: block;
+            font-size: 12px;
+            font-weight: 400;
+            color: #b09078;
+            margin-top: 1px;
+        }
+        .version-select .v-btn.active {
+            border-color: #8b5a3c;
+            background: #f8f0e8;
+            box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.15);
+        }
+        .version-select .v-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ===== 个人资料表单 ===== */
+        .profile-form {
+            margin-top: 18px;
+        }
+        .profile-form .form-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #5d3a24;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .profile-form .form-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0d0c0;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #6a4a34;
+            margin-bottom: 4px;
+        }
+        .form-group label .required {
+            color: #c05050;
+            margin-left: 2px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e8ddd0;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #3d2c1e;
+            background: #fcf8f4;
+            transition: border-color 0.2s;
+            font-family: inherit;
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #8b5a3c;
+            box-shadow: 0 0 0 3px rgba(139, 90, 60, 0.08);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 56px;
+            line-height: 1.6;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        /* ===== 开始按钮 ===== */
+        .btn-start {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #8b5a3c, #6a402a);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 18px rgba(139, 90, 60, 0.30);
+            transition: all 0.25s;
+            margin-top: 14px;
+        }
+        .btn-start:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 10px rgba(139, 90, 60, 0.20);
+        }
+        .btn-start:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ===== 答题页 ===== */
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: #ece0d6;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #b88a6a, #8b5a3c);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+        .progress-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #7a4a2e;
+            min-width: 52px;
+            text-align: right;
+        }
+
+        .q-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .q-type {
+            display: inline-block;
+            background: #e8d5c4;
+            color: #5d3a24;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 14px;
+            border-radius: 30px;
+            letter-spacing: 1px;
+        }
+        .q-reverse {
+            display: inline-block;
+            background: #f0d8cc;
+            color: #a05030;
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-weight: 500;
+        }
+        .q-number {
+            font-size: 14px;
+            color: #a0806a;
+            font-weight: 500;
+            margin-left: auto;
+        }
+        .q-text {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.7;
+            color: #3d2c1e;
+            padding: 6px 0 14px;
+            min-height: 56px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .options .opt {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: #faf5f0;
+            border: 1.5px solid #ede4db;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 15px;
+            color: #4d3a2a;
+            font-weight: 400;
+            user-select: none;
+        }
+        .options .opt:active {
+            transform: scale(0.98);
+        }
+        .options .opt .dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #d5c0b0;
+            margin-right: 14px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            font-size: 12px;
+            color: #8b5a3c;
+            font-weight: 700;
+        }
+        .options .opt.selected {
+            border-color: #8b5a3c;
+            background: #f5ede6;
+            box-shadow: 0 0 0 2px rgba(139, 90, 60, 0.10);
+        }
+        .options .opt.selected .dot {
+            border-color: #8b5a3c;
+            background: #8b5a3c;
+            color: #fff;
+        }
+        .options .opt .label {
+            flex: 1;
+        }
+        .options .opt .score-label {
+            font-size: 12px;
+            color: #a0806a;
+            margin-left: 8px;
+            font-weight: 300;
+        }
+        /* 自动跳转提示 */
+        .auto-hint {
+            text-align: center;
+            font-size: 13px;
+            color: #b09078;
+            margin-top: 12px;
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+
+        /* ===== 导航 ===== */
+        .nav-btns {
+            display: flex;
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .nav-btns button {
+            flex: 1;
+            padding: 14px 10px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            letter-spacing: 1px;
+        }
+        .nav-btns .btn-prev {
+            background: #ede4db;
+            color: #6a4a34;
+        }
+        .nav-btns .btn-prev:active {
+            background: #ddd0c4;
+            transform: scale(0.97);
+        }
+        .nav-btns .btn-prev:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ===== 结果页 ===== */
+        .result-wrap {
+            animation: fadeUp 0.5s ease;
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-profile {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            background: #f8f0e8;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #5d3a24;
+        }
+        .result-profile .rp-item {
+            text-align: center;
+        }
+        .result-profile .rp-item .rp-label {
+            font-size: 11px;
+            color: #a0806a;
+        }
+        .result-profile .rp-item .rp-value {
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .result-final {
+            text-align: center;
+            padding: 20px 16px;
+            border-radius: 18px;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, #f8f0e8, #f0e6dc);
+            border: 2px solid #d5c0b0;
+        }
+        .result-final .final-label {
+            font-size: 13px;
+            color: #8a6a54;
+            letter-spacing: 2px;
+        }
+        .result-final .final-type {
+            font-size: 28px;
+            font-weight: 800;
+            color: #5d3a24;
+            margin: 6px 0 4px;
+        }
+        .result-final .final-status {
+            font-size: 15px;
+            color: #8a6a54;
+            font-weight: 500;
+        }
+        .result-final .final-badge {
+            display: inline-block;
+            padding: 4px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+        .final-badge.pinghe {
+            background: #c9b8a8;
+            color: #3d2c1e;
+        }
+        .final-badge.yes {
+            background: #d4c4b0;
+            color: #5d3a24;
+        }
+        .final-badge.tend {
+            background: #f0e0d0;
+            color: #8a5a3a;
+        }
+        .final-badge.no {
+            background: #ece4dc;
+            color: #8a7a6a;
+        }
+
+        /* 体质详情 */
+        .result-detail-section {
+            margin-top: 18px;
+        }
+        .result-detail-section .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #5d3a24;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .result-detail-section .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0d0c0;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .detail-grid .dg-item {
+            background: #faf5f0;
+            border-radius: 12px;
+            padding: 12px 14px;
+            border-left: 4px solid #d5c0b0;
+        }
+        .detail-grid .dg-item .dg-label {
+            font-size: 12px;
+            color: #a0806a;
+            font-weight: 500;
+        }
+        .detail-grid .dg-item .dg-value {
+            font-size: 14px;
+            color: #3d2c1e;
+            margin-top: 4px;
+            line-height: 1.6;
+        }
+        .detail-grid .dg-item.full {
+            grid-column: 1 / -1;
+        }
+
+        /* 所有体质得分条 */
+        .result-bars {
+            margin-top: 16px;
+        }
+        .result-bars .rb-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: #faf5f0;
+            margin-bottom: 5px;
+            gap: 10px;
+        }
+        .result-bars .rb-item .rb-name {
+            width: 60px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #5d3a24;
+            flex-shrink: 0;
+        }
+        .result-bars .rb-item .rb-bar {
+            flex: 1;
+            height: 7px;
+            background: #ece0d6;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .result-bars .rb-item .rb-bar .rb-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+        .result-bars .rb-item .rb-score {
+            font-size: 13px;
+            font-weight: 700;
+            color: #5d3a24;
+            min-width: 38px;
+            text-align: right;
+        }
+        .result-bars .rb-item .rb-tag {
+            font-size: 11px;
+            font-weight: 600;
+            min-width: 42px;
+            text-align: right;
+            color: #8a6a54;
+        }
+
+        /* 结果按钮 */
+        .result-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .result-actions button {
+            flex: 1;
+            padding: 14px 10px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            letter-spacing: 1px;
+        }
+        .result-actions .btn-retest {
+            background: #ede4db;
+            color: #6a4a34;
+        }
+        .result-actions .btn-retest:active {
+            background: #ddd0c4;
+            transform: scale(0.97);
+        }
+        .result-actions .btn-switch {
+            background: #f5ede6;
+            color: #6a4a34;
+            border: 1.5px solid #d5c0b0;
+        }
+        .result-actions .btn-switch:active {
+            transform: scale(0.97);
+        }
+
+        /* ===== 免责 ===== */
+        .disclaimer {
+            margin-top: 24px;
+            padding: 14px 18px;
+            background: #f8f0e8;
+            border-radius: 14px;
+            font-size: 12px;
+            color: #8a7a6a;
+            line-height: 1.8;
+            border-left: 4px solid #d5c0b0;
+        }
+        .disclaimer strong {
+            color: #6a4a34;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 420px) {
+            .app {
+                padding: 10px 10px 20px;
+            }
+            .card {
+                padding: 18px 14px;
+            }
+            .q-text {
+                font-size: 16px;
+            }
+            .options .opt {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+            .result-profile {
+                grid-template-columns: 1fr 1fr 1fr;
+                font-size: 12px;
+                padding: 10px 12px;
+            }
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+            .detail-grid .dg-item.full {
+                grid-column: 1;
+            }
+            .result-final .final-type {
+                font-size: 24px;
+            }
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .brand h1 {
+                font-size: 19px;
+            }
+            .version-select .v-btn {
+                padding: 12px 10px;
+                font-size: 13px;
+            }
+        }
+        @media (max-width: 360px) {
+            .result-profile {
+                grid-template-columns: 1fr 1fr;
+            }
+            .result-bars .rb-item .rb-name {
+                width: 48px;
+                font-size: 12px;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.35s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f0e8e0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d5c0b0;
+            border-radius: 10px;
+        }
+
+        /* 选项禁用点击（跳转动画期间） */
+        .options .opt.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app" id="app">
+        <!-- 品牌 -->
+        <div class="brand">
+            <h1>九体质 · 辨体测评</h1>
+            <div class="sub">中医体质分类与判定标准</div>
+            <div class="badge">亚健康 · 养生调养参考</div>
+        </div>
+
+        <!-- ======== 版本选择 + 个人资料 ======== -->
+        <div class="card" id="homePage">
+            <div class="version-select">
+                <div style="font-size:15px;font-weight:600;color:#5d3a24;text-align:center;">选择测评版本</div>
+                <div class="v-grid">
+                    <div class="v-btn active" data-v="2009" id="v2009">
+                        2009 原版
+                        <span class="tag">行业通用 · 研修班</span>
+                        <span class="count">67 题 · 详细辨证</span>
+                    </div>
+                    <div class="v-btn" data-v="2025" id="v2025">
+                        2025 新版
+                        <span class="tag">国标 GB/T 46939</span>
+                        <span class="count">30 题 · 快速自测</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 个人资料 -->
+            <div class="profile-form">
+                <div class="form-title">📋 个人资料</div>
+                <div class="form-group">
+                    <label>真实姓名 <span class="required">*</span></label>
+                    <input type="text" id="userName" placeholder="请输入您的姓名" maxlength="20">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>性别 <span class="required">*</span></label>
+                        <select id="userGender">
+                            <option value="">请选择</option>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>出生日期 <span class="required">*</span></label>
+                        <input type="date" id="userBirth">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>身高 (cm) <span class="required">*</span></label>
+                        <input type="number" id="userHeight" placeholder="170" min="50" max="250">
+                    </div>
+                    <div class="form-group">
+                        <label>体重 (kg) <span class="required">*</span></label>
+                        <input type="number" id="userWeight" placeholder="65" min="20" max="300">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>腰围 (cm) <span class="required">*</span></label>
+                    <input type="number" id="userWaist" placeholder="80" min="40" max="200">
+                </div>
+                <div class="form-group">
+                    <label>疾病史（如高血压、糖尿病等，无则填"无"）<span class="required">*</span></label>
+                    <textarea id="userHistory" placeholder="请填写您已知的疾病史，若无请填「无」" rows="2"></textarea>
+                </div>
+                <button class="btn-start" id="startBtn">开始测评 →</button>
+            </div>
+
+            <div class="disclaimer" style="margin-top:16px;">
+                <strong>⚠️ 商用合规提示</strong><br>
+                本量表仅作亚健康养生参考工具，<strong>严禁使用“诊断、治病、诊疗、确诊”等医疗词汇</strong>。
+                不可替代执业中医师专业诊疗。搭配温养项目时，只做养生搭配建议，不承诺改善病症。
+            </div>
+        </div>
+
+        <!-- ======== 答题页 ======== -->
+        <div class="card hidden" id="quizPage">
+            <div class="progress-wrap">
+                <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+                <span class="progress-text" id="progressText">0/0</span>
+            </div>
+            <div class="question-area" id="questionArea"></div>
+            <div class="nav-btns">
+                <button class="btn-prev" id="prevBtn">← 上一题</button>
+                <button class="btn-prev" style="flex:0.6;background:transparent;color:#b09078;font-weight:400;cursor:default;border:none;pointer-events:none;" disabled>自动跳转</button>
+            </div>
+            <div class="auto-hint">✓ 选择后自动进入下一题</div>
+        </div>
+
+        <!-- ======== 结果页 ======== -->
+        <div class="card hidden" id="resultPage">
+            <div class="result-wrap" id="resultWrap"></div>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  1. 数据定义
+        // ================================================================
+
+        // -------- 体质详细说明 --------
+        const CONST_DETAILS = {
+            '平和质': {
+                summary: '阴阳气血调和，以体态适中、面色红润、精力充沛等为主要特征。',
+                body: '体形匀称健壮。',
+                signs: '面色、肤色润泽，头发稠密有光泽，目光有神，鼻色明润，嗅觉通利，唇色红润，不易疲劳，精力充沛，耐受寒热，睡眠良好，胃纳佳，二便正常，舌淡红，苔薄白，脉和缓有力。',
+                mind: '性格随和开朗。',
+                disease: '平素患病较少。',
+                adapt: '对自然环境和社会环境适应能力较强。'
+            },
+            '气虚质': {
+                summary: '元气不足，以疲乏、气短、自汗等气虚表现为主要特征。',
+                body: '肌肉松软不实。',
+                signs: '平素语音低弱，气短懒言，容易疲乏，精神不振，易出汗，舌淡红，舌边有齿痕，脉弱。',
+                mind: '性格内向，不喜冒险。',
+                disease: '易患感冒、内脏下垂等病。',
+                adapt: '不耐受风、寒、暑、湿邪。'
+            },
+            '阳虚质': {
+                summary: '阳气不足，以畏寒怕冷、手足不温等虚寒表现为主要特征。',
+                body: '肌肉松软不实。',
+                signs: '平素畏冷，手足不温，喜热饮食，精神不振，舌淡胖嫩，脉沉迟。',
+                mind: '性格多沉静、内向。',
+                disease: '易患痰饮、肿胀、泄泻等病。',
+                adapt: '耐夏不耐冬，易感风、寒、湿邪。'
+            },
+            '阴虚质': {
+                summary: '阴液亏少，以口燥咽干、手足心热等虚热表现为主要特征。',
+                body: '体形偏瘦。',
+                signs: '手足心热，口燥咽干，鼻微干，喜冷饮，大便干燥，舌红少津，脉细数。',
+                mind: '性情急躁，外向好动，活泼。',
+                disease: '易患虚劳、失精、不寐等病。',
+                adapt: '耐冬不耐夏，不耐受暑、热、燥邪。'
+            },
+            '痰湿质': {
+                summary: '痰湿凝聚，以形体肥胖、腹部肥满、口黏苔腻等痰湿表现为主要特征。',
+                body: '体形肥胖，腹部肥满松软。',
+                signs: '面部皮肤油脂较多，多汗且黏，胸闷，痰多，口黏腻或甜，喜食肥甘甜黏，苔腻，脉滑。',
+                mind: '性格偏温和、稳重，多善于忍耐。',
+                disease: '易患消渴、中风、胸痹等病。',
+                adapt: '对梅雨季节及湿重环境适应能力差。'
+            },
+            '湿热质': {
+                summary: '湿热内蕴，以面垢油光、口苦、苔黄腻等湿热表现为主要特征。',
+                body: '形体中等或偏瘦。',
+                signs: '面垢油光，易生痤疮，口苦口干，身重困倦，大便黏滞不畅或燥结，小便短黄，男性易阴囊潮湿，女性易带下增多，舌质偏红，苔黄腻，脉滑数。',
+                mind: '容易心烦急躁。',
+                disease: '易患疮疖、黄疸、热淋等病。',
+                adapt: '对夏末秋初湿热气候，湿重或气温偏高环境较难适应。'
+            },
+            '血瘀质': {
+                summary: '血行不畅，以肤色晦暗、舌质紫暗等血瘀表现为主要特征。',
+                body: '胖瘦均见。',
+                signs: '肤色晦暗，色素沉着，容易出现瘀斑，口唇暗淡，舌暗或有瘀点，舌下络脉紫暗或增粗，脉涩。',
+                mind: '易烦，健忘。',
+                disease: '易患癥瘕及痛证、血证等。',
+                adapt: '不耐受寒邪。'
+            },
+            '气郁质': {
+                summary: '气机郁滞，以神情抑郁、忧虑脆弱等气郁表现为主要特征。',
+                body: '形体瘦者为多。',
+                signs: '神情抑郁，情感脆弱，烦闷不乐，舌淡红，苔薄白，脉弦。',
+                mind: '性格内向不稳定、敏感多虑。',
+                disease: '易患脏躁、梅核气、百合病及郁证等。',
+                adapt: '对精神刺激适应能力较差；不适应阴雨天气。'
+            },
+            '特禀质': {
+                summary: '先天失常，以生理缺陷、过敏反应等为主要特征。',
+                body: '无特殊，或有畸形，或有先天生理缺陷。',
+                signs: '过敏体质者常见哮喘、风团、咽痒、鼻塞、喷嚏等；患遗传性疾病者有垂直遗传、先天性、家族性特征。',
+                mind: '随禀质不同情况各异。',
+                disease: '过敏体质者易患哮喘、荨麻疹、花粉症及药物过敏等；遗传性疾病如血友病、先天愚型等。',
+                adapt: '适应能力差，如过敏体质者对易致过敏季节适应能力差，易引发宿疾。'
+            }
+        };
+
+        // -------- 2009 原版 67题 --------
+        const DATA_2009 = {
+            version: '2009',
+            label: '2009 原版 67题',
+            constitutions: {
+                '平和质': { total: 8, reverse: [1, 2, 3, 4, 6] },
+                '气虚质': { total: 7, reverse: [] },
+                '阳虚质': { total: 7, reverse: [] },
+                '阴虚质': { total: 8, reverse: [] },
+                '痰湿质': { total: 8, reverse: [] },
+                '湿热质': { total: 7, reverse: [] },
+                '血瘀质': { total: 7, reverse: [] },
+                '气郁质': { total: 7, reverse: [] },
+                '特禀质': { total: 7, reverse: [] }
+            },
+            questions: [
+                { text: '您精力充沛吗？', type: '平和质', reverse: false },
+                { text: '您容易疲乏吗？', type: '平和质', reverse: true },
+                { text: '您说话声音低弱无力吗？', type: '平和质', reverse: true },
+                { text: '您感到闷闷不乐、情绪低沉吗？', type: '平和质', reverse: true },
+                { text: '您比一般人耐受不了寒冷（冬天冷、夏天空调）吗？', type: '平和质', reverse: true },
+                { text: '您能适应外界自然和社会环境的变化吗？', type: '平和质', reverse: false },
+                { text: '您容易失眠吗？', type: '平和质', reverse: true },
+                { text: '您容易忘事（健忘）吗？', type: '平和质', reverse: true },
+                { text: '您容易疲乏吗？', type: '气虚质', reverse: false },
+                { text: '您稍微活动就气短、喘不上气吗？', type: '气虚质', reverse: false },
+                { text: '您容易心慌吗？', type: '气虚质', reverse: false },
+                { text: '您安静不动也自汗，一动出汗更多吗？', type: '气虚质', reverse: false },
+                { text: '您换季容易感冒吗？', type: '气虚质', reverse: false },
+                { text: '您饭后腹胀、大便稀软不成形吗？', type: '气虚质', reverse: false },
+                { text: '您说话声音低微、不愿多说话吗？', type: '气虚质', reverse: false },
+                { text: '您腰腹、后背、膝盖常年怕冷发凉吗？', type: '阳虚质', reverse: false },
+                { text: '您比别人需要穿更多衣服才不冷吗？', type: '阳虚质', reverse: false },
+                { text: '您惧怕冷风、凉水、空调冷气吗？', type: '阳虚质', reverse: false },
+                { text: '您吃生冷食物就胃痛、拉肚子吗？', type: '阳虚质', reverse: false },
+                { text: '您小便清长、夜里频繁起夜吗？', type: '阳虚质', reverse: false },
+                { text: '您面色苍白、缺少血色吗？', type: '阳虚质', reverse: false },
+                { text: '女性小腹常年冰凉、痛经；男性畏寒乏力吗？', type: '阳虚质', reverse: false },
+                { text: '您手心脚心、心口常年发热吗？', type: '阴虚质', reverse: false },
+                { text: '您夜里睡着出汗，醒后立刻停止（盗汗）吗？', type: '阴虚质', reverse: false },
+                { text: '您常年口干咽燥，喝水也不解渴吗？', type: '阴虚质', reverse: false },
+                { text: '您眼睛、皮肤干涩发痒吗？', type: '阴虚质', reverse: false },
+                { text: '您大便干结、排便费力吗？', type: '阴虚质', reverse: false },
+                { text: '您容易心烦急躁、多梦失眠吗？', type: '阴虚质', reverse: false },
+                { text: '您反复口腔溃疡、虚火长痘吗？', type: '阴虚质', reverse: false },
+                { text: '您活动稍大就出虚汗吗？', type: '阴虚质', reverse: false },
+                { text: '您身体沉重、头部发闷像裹了布、浑身不清爽吗？', type: '痰湿质', reverse: false },
+                { text: '您腹部松软肥大、四肢容易浮肿吗？', type: '痰湿质', reverse: false },
+                { text: '您头皮、面部极易出油吗？', type: '痰湿质', reverse: false },
+                { text: '您口中黏腻、喉咙总有痰、咳不干净吗？', type: '痰湿质', reverse: false },
+                { text: '您大便黏马桶、冲水冲不干净吗？', type: '痰湿质', reverse: false },
+                { text: '您整日犯困、懒得走动活动吗？', type: '痰湿质', reverse: false },
+                { text: '您偏爱甜食、奶茶、油腻肉食吗？', type: '痰湿质', reverse: false },
+                { text: '您下肢沉重、走路酸胀发沉吗？', type: '痰湿质', reverse: false },
+                { text: '您面部、鼻尖常年油光，反复长痤疮吗？', type: '湿热质', reverse: false },
+                { text: '您口苦口臭、嘴里黏腻有异味吗？', type: '湿热质', reverse: false },
+                { text: '您小便颜色深黄、排尿有灼热感吗？', type: '湿热质', reverse: false },
+                { text: '您大便黏滞、味道重、总排不干净吗？', type: '湿热质', reverse: false },
+                { text: '您腋下、私处潮湿瘙痒、体味偏重吗？', type: '湿热质', reverse: false },
+                { text: '您皮肤容易起湿疹、红疹、瘙痒吗？', type: '湿热质', reverse: false },
+                { text: '您一点小事就急躁发火吗？', type: '湿热质', reverse: false },
+                { text: '您面色暗沉、容易长黄褐斑、色斑吗？', type: '血瘀质', reverse: false },
+                { text: '您嘴唇颜色偏暗、舌下青筋粗大吗？', type: '血瘀质', reverse: false },
+                { text: '您身体莫名出现淤青，磕碰后很久不散吗？', type: '血瘀质', reverse: false },
+                { text: '身体固定位置长期刺痛（头痛、肩颈、乳腺刺痛）吗？', type: '血瘀质', reverse: false },
+                { text: '女性经血血块多、痛经严重、排出不畅吗？', type: '血瘀质', reverse: false },
+                { text: '您皮肤干燥、易长丝状疣、赘生物吗？', type: '血瘀质', reverse: false },
+                { text: '久坐后浑身僵硬、气血不通畅吗？', type: '血瘀质', reverse: false },
+                { text: '您经常不自觉长长叹气（善太息）吗？', type: '气郁质', reverse: false },
+                { text: '您容易精神紧张、焦虑不安吗？', type: '气郁质', reverse: false },
+                { text: '您多愁善感、敏感、胡思乱想吗？', type: '气郁质', reverse: false },
+                { text: '您容易受惊、心慌害怕吗？', type: '气郁质', reverse: false },
+                { text: '您两侧肋骨、乳房发胀，情绪差时胀痛加重吗？', type: '气郁质', reverse: false },
+                { text: '您喉咙有异物感，吞不下、吐不出（梅核气）吗？', type: '气郁质', reverse: false },
+                { text: '您情绪低落、睡眠浅、多梦胸闷吗？', type: '气郁质', reverse: false },
+                { text: '没有感冒也频繁打喷嚏、流鼻涕吗？', type: '特禀质', reverse: false },
+                { text: '无感冒症状依旧鼻塞、流清涕吗？', type: '特禀质', reverse: false },
+                { text: '换季、遇冷空气、异味会咳喘吗？', type: '特禀质', reverse: false },
+                { text: '您容易过敏（药物、食物、花粉、换季）吗？', type: '特禀质', reverse: false },
+                { text: '皮肤容易起荨麻疹、风疹块吗？', type: '特禀质', reverse: false },
+                { text: '皮肤过敏出现过紫红色瘀斑吗？', type: '特禀质', reverse: false },
+                { text: '皮肤一抓就发红、留下清晰抓痕吗？', type: '特禀质', reverse: false }
+            ]
+        };
+
+        // -------- 2025 新版 30题 --------
+        const DATA_2025 = {
+            version: '2025',
+            label: '2025 新版 30题',
+            constitutions: {
+                '平和质': { total: 4, reverse: [1, 2] },
+                '气虚质': { total: 3, reverse: [] },
+                '阳虚质': { total: 3, reverse: [] },
+                '阴虚质': { total: 3, reverse: [] },
+                '痰湿质': { total: 3, reverse: [] },
+                '湿热质': { total: 3, reverse: [] },
+                '血瘀质': { total: 3, reverse: [] },
+                '气郁质': { total: 3, reverse: [] },
+                '特禀质': { total: 2, reverse: [] }
+            },
+            questions: [
+                { text: '您精力充沛吗？', type: '平和质', reverse: false },
+                { text: '您容易疲乏吗？', type: '平和质', reverse: true },
+                { text: '您容易情绪低落、闷闷不乐吗？', type: '平和质', reverse: true },
+                { text: '您能适应季节、环境变化吗？', type: '平和质', reverse: false },
+                { text: '您稍活动即气短乏力吗？', type: '气虚质', reverse: false },
+                { text: '您不动也容易出汗吗？', type: '气虚质', reverse: false },
+                { text: '您换季极易感冒吗？', type: '气虚质', reverse: false },
+                { text: '您常年手脚冰凉、畏寒怕冷吗？', type: '阳虚质', reverse: false },
+                { text: '您怕吹空调、不敢吃生冷食物吗？', type: '阳虚质', reverse: false },
+                { text: '您小便清长、夜间频繁起夜吗？', type: '阳虚质', reverse: false },
+                { text: '您手脚心发热、夜里盗汗吗？', type: '阴虚质', reverse: false },
+                { text: '您长期口干、眼睛干涩吗？', type: '阴虚质', reverse: false },
+                { text: '您容易心烦失眠、反复上火长痘吗？', type: '阴虚质', reverse: false },
+                { text: '您身体沉重、腹部肥胖松软吗？', type: '痰湿质', reverse: false },
+                { text: '您痰多、口中黏腻、大便黏马桶吗？', type: '痰湿质', reverse: false },
+                { text: '您嗜睡、不爱运动、爱吃甜腻吗？', type: '痰湿质', reverse: false },
+                { text: '您面部出油、反复长痘痘吗？', type: '湿热质', reverse: false },
+                { text: '您口苦、体味重、私处潮湿瘙痒吗？', type: '湿热质', reverse: false },
+                { text: '小便黄、大便黏腻不爽吗？', type: '湿热质', reverse: false },
+                { text: '您面色暗沉长斑、嘴唇发暗吗？', type: '血瘀质', reverse: false },
+                { text: '身体固定位置刺痛、磕碰易淤青吗？', type: '血瘀质', reverse: false },
+                { text: '女性经血血块多、痛经明显吗？', type: '血瘀质', reverse: false },
+                { text: '您频繁叹气、胸闷胁胀吗？', type: '气郁质', reverse: false },
+                { text: '您焦虑敏感、情绪低落吗？', type: '气郁质', reverse: false },
+                { text: '咽喉异物感、失眠多梦吗？', type: '气郁质', reverse: false },
+                { text: '换季、遇刺激易鼻炎、咳喘吗？', type: '特禀质', reverse: false },
+                { text: '皮肤易过敏、起荨麻疹抓痕吗？', type: '特禀质', reverse: false }
+            ]
+        };
+
+        const CONST_ORDER = ['平和质', '气虚质', '阳虚质', '阴虚质', '痰湿质', '湿热质', '血瘀质', '气郁质', '特禀质'];
+        const CONST_COLORS = {
+            '平和质': '#7a9a6a',
+            '气虚质': '#b88a6a',
+            '阳虚质': '#c9a070',
+            '阴虚质': '#b07070',
+            '痰湿质': '#b09870',
+            '湿热质': '#b08050',
+            '血瘀质': '#9a6a6a',
+            '气郁质': '#8a7a9a',
+            '特禀质': '#8a9a8a'
+        };
+
+        // ================================================================
+        //  2. 应用状态
+        // ================================================================
+        const state = {
+            version: '2009',
+            data: null,
+            answers: [],
+            currentIndex: 0,
+            totalQuestions: 0,
+            isTransitioning: false,
+            // 个人资料
+            profile: {}
+        };
+
+        // DOM 引用
+        const $ = id => document.getElementById(id);
+        const homePage = $('homePage');
+        const quizPage = $('quizPage');
+        const resultPage = $('resultPage');
+        const questionArea = $('questionArea');
+        const progressFill = $('progressFill');
+        const progressText = $('progressText');
+        const prevBtn = $('prevBtn');
+        const startBtn = $('startBtn');
+        const v2009 = $('v2009');
+        const v2025 = $('v2025');
+        const resultWrap = $('resultWrap');
+
+        // 个人资料字段
+        const profileFields = ['userName', 'userGender', 'userBirth', 'userHeight', 'userWeight', 'userWaist', 'userHistory'];
+
+        // ================================================================
+        //  3. 初始化
+        // ================================================================
+        function init() {
+            v2009.addEventListener('click', () => selectVersion('2009'));
+            v2025.addEventListener('click', () => selectVersion('2025'));
+            startBtn.addEventListener('click', startQuiz);
+            prevBtn.addEventListener('click', goPrev);
+            selectVersion('2009');
+        }
+
+        function selectVersion(v) {
+            state.version = v;
+            document.querySelectorAll('.v-btn').forEach(el => el.classList.remove('active'));
+            if (v === '2009') v2009.classList.add('active');
+            else v2025.classList.add('active');
+        }
+
+        // ================================================================
+        //  4. 开始测评
+        // ================================================================
+        function startQuiz() {
+            // 收集个人资料
+            const profile = {};
+            let valid = true;
+            const name = $('userName').value.trim();
+            const gender = $('userGender').value;
+            const birth = $('userBirth').value;
+            const height = $('userHeight').value.trim();
+            const weight = $('userWeight').value.trim();
+            const waist = $('userWaist').value.trim();
+            const history = $('userHistory').value.trim();
+
+            if (!name) { valid = false;
+                $('userName').focus();
+                alert('请填写真实姓名'); return; }
+            if (!gender) { valid = false;
+                $('userGender').focus();
+                alert('请选择性别'); return; }
+            if (!birth) { valid = false;
+                $('userBirth').focus();
+                alert('请选择出生日期'); return; }
+            if (!height || isNaN(height) || Number(height) < 20) { valid = false;
+                $('userHeight').focus();
+                alert('请填写有效身高（cm）'); return; }
+            if (!weight || isNaN(weight) || Number(weight) < 10) { valid = false;
+                $('userWeight').focus();
+                alert('请填写有效体重（kg）'); return; }
+            if (!waist || isNaN(waist) || Number(waist) < 30) { valid = false;
+                $('userWaist').focus();
+                alert('请填写有效腰围（cm）'); return; }
+            if (!history) { valid = false;
+                $('userHistory').focus();
+                alert('请填写疾病史（无则填"无"）'); return; }
+
+            state.profile = {
+                name,
+                gender,
+                birth,
+                height: Number(height),
+                weight: Number(weight),
+                waist: Number(waist),
+                history
+            };
+
+            // 初始化数据
+            const v = state.version;
+            state.data = v === '2009' ? DATA_2009 : DATA_2025;
+            state.totalQuestions = state.data.questions.length;
+            state.answers = new Array(state.totalQuestions).fill(0);
+            state.currentIndex = 0;
+            state.isTransitioning = false;
+
+            homePage.classList.add('hidden');
+            quizPage.classList.remove('hidden');
+            resultPage.classList.add('hidden');
+
+            renderQuestion();
+            updateProgress();
+            updateNavButtons();
+        }
+
+        // ================================================================
+        //  5. 渲染题目
+        // ================================================================
+        function renderQuestion() {
+            const idx = state.currentIndex;
+            const qs = state.data.questions;
+            const q = qs[idx];
+            const total = qs.length;
+            const selected = state.answers[idx];
+
+            const typeLabel = q.type;
+            const isReverse = q.reverse;
+            const color = CONST_COLORS[q.type] || '#8b5a3c';
+
+            let html = `
+                <div class="fade-in">
+                    <div class="q-header">
+                        <span class="q-type" style="background:${color}20;color:${color};">${typeLabel}</span>
+                        ${isReverse ? '<span class="q-reverse">反向计分 *</span>' : ''}
+                        <span class="q-number">${idx+1} / ${total}</span>
+                    </div>
+                    <div class="q-text">${q.text}</div>
+                    <div class="options" id="optionsContainer">
+            `;
+
+            const labels = ['没有', '很少', '有时', '经常', '总是'];
+            for (let i = 1; i <= 5; i++) {
+                const sel = (selected === i) ? 'selected' : '';
+                html += `
+                    <div class="opt ${sel}" data-score="${i}" onclick="selectOption(${idx}, ${i})">
+                        <span class="dot">${i}</span>
+                        <span class="label">${labels[i-1]}</span>
+                        <span class="score-label">${i}分</span>
+                    </div>
+                `;
+            }
+
+            html += `</div></div>`;
+            questionArea.innerHTML = html;
+            updateProgress();
+            updateNavButtons();
+        }
+
+        // ================================================================
+        //  6. 选择选项 + 自动跳转
+        // ================================================================
+        window.selectOption = function(idx, score) {
+            if (state.isTransitioning) return;
+            // 如果已选相同分数，不重复触发
+            if (state.answers[idx] === score) return;
+
+            state.answers[idx] = score;
+            renderQuestion();
+
+            // 高亮选中的选项
+            const opts = document.querySelectorAll('.opt');
+            opts.forEach(el => {
+                const s = parseInt(el.dataset.score);
+                if (s === score) el.classList.add('selected');
+                else el.classList.remove('selected');
+            });
+
+            // 标记正在过渡
+            state.isTransitioning = true;
+            // 禁用所有选项（防止连点）
+            document.querySelectorAll('.opt').forEach(el => el.classList.add('disabled'));
+
+            // 延迟自动跳转
+            const delay = 350;
+            setTimeout(() => {
+                state.isTransitioning = false;
+                document.querySelectorAll('.opt').forEach(el => el.classList.remove('disabled'));
+
+                const isLast = (idx === state.totalQuestions - 1);
+                if (isLast) {
+                    // 最后一题，自动显示结果
+                    showResult();
+                } else {
+                    // 进入下一题
+                    state.currentIndex = idx + 1;
+                    renderQuestion();
+                    updateProgress();
+                    updateNavButtons();
+                    // 滚动到题目顶部
+                    const qArea = document.querySelector('.question-area');
+                    if (qArea) qArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, delay);
+        };
+
+        // ================================================================
+        //  7. 导航
+        // ================================================================
+        function goPrev() {
+            if (state.currentIndex > 0 && !state.isTransitioning) {
+                state.currentIndex--;
+                renderQuestion();
+                updateProgress();
+                updateNavButtons();
+            }
+        }
+
+        function updateProgress() {
+            const total = state.totalQuestions;
+            const answered = state.answers.filter(a => a > 0).length;
+            const pct = total > 0 ? (answered / total * 100) : 0;
+            progressFill.style.width = Math.min(pct, 100) + '%';
+            progressText.textContent = `${answered}/${total}`;
+        }
+
+        function updateNavButtons() {
+            prevBtn.disabled = (state.currentIndex === 0);
+            prevBtn.style.opacity = (state.currentIndex === 0) ? '0.3' : '1';
+        }
+
+        // ================================================================
+        //  8. 计算结果
+        // ================================================================
+        function computeResults() {
+            const data = state.data;
+            const qs = data.questions;
+            const answers = state.answers;
+            const constMap = data.constitutions;
+
+            const groups = {};
+            for (const [name, info] of Object.entries(constMap)) {
+                groups[name] = {
+                    total: info.total,
+                    reverse: info.reverse || [],
+                    scores: []
+                };
+            }
+
+            qs.forEach((q, idx) => {
+                const raw = answers[idx] || 0;
+                let score = raw;
+                if (q.reverse && raw > 0) {
+                    score = 6 - raw;
+                }
+                if (groups[q.type]) {
+                    groups[q.type].scores.push(score);
+                }
+            });
+
+            const results = {};
+            for (const [name, info] of Object.entries(groups)) {
+                const scores = info.scores.slice(0, info.total);
+                const sum = scores.reduce((a, b) => a + b, 0);
+                const total = info.total;
+                const rawScore = sum;
+                const transformScore = total > 0 ? ((rawScore - total) / (total * 4)) * 100 : 0;
+                results[name] = {
+                    raw: rawScore,
+                    transform: Math.round(transformScore * 10) / 10,
+                    total: total,
+                    scores: scores
+                };
+            }
+            return results;
+        }
+
+        function getJudgment(name, score, allResults) {
+            if (name === '平和质') {
+                const pingheScore = score;
+                let allLow = true;
+                for (const [n, r] of Object.entries(allResults)) {
+                    if (n !== '平和质' && r.transform >= 30) { allLow = false; break; }
+                }
+                if (pingheScore >= 60 && allLow) return { status: '标准平和', short: '平和', cls: 'pinghe' };
+                if (pingheScore >= 60) return { status: '倾向偏颇', short: '倾向偏颇', cls: 'tend' };
+                if (pingheScore >= 30) return { status: '非平和质', short: '非平和', cls: 'no' };
+                return { status: '非平和质', short: '非平和', cls: 'no' };
+            }
+            if (score >= 40) return { status: '是', short: '是', cls: 'yes' };
+            if (score >= 30) return { status: '倾向是', short: '倾向', cls: 'tend' };
+            return { status: '否', short: '否', cls: 'no' };
+        }
+
+        // ================================================================
+        //  9. 判定最终体质
+        // ================================================================
+        function determineFinalType(results) {
+            const pinghe = results['平和质'];
+            const isPinghe = pinghe && pinghe.transform >= 60;
+            let allLow = true;
+            for (const [n, r] of Object.entries(results)) {
+                if (n !== '平和质' && r.transform >= 30) { allLow = false; break; }
+            }
+            if (isPinghe && allLow) {
+                return { type: '平和质', status: '标准平和', cls: 'pinghe' };
+            }
+
+            // 找出偏颇体质中转化分最高的
+            let maxScore = -1;
+            let maxType = '平和质';
+            let maxStatus = '否';
+            for (const [name, r] of Object.entries(results)) {
+                if (name === '平和质') continue;
+                const j = getJudgment(name, r.transform, results);
+                // 优先取 "是" > "倾向是" > "否"，同等级取分数高
+                let rank = 0;
+                if (j.cls === 'yes') rank = 3;
+                else if (j.cls === 'tend') rank = 2;
+                else if (j.cls === 'no') rank = 1;
+
+                let curRank = 0;
+                if (maxStatus === '是') curRank = 3;
+                else if (maxStatus === '倾向') curRank = 2;
+                else if (maxStatus === '否') curRank = 1;
+
+                if (rank > curRank || (rank === curRank && r.transform > maxScore)) {
+                    maxScore = r.transform;
+                    maxType = name;
+                    maxStatus = j.short;
+                }
+            }
+
+            // 如果最高分 < 30，判定为"无明显偏颇"
+            if (maxScore < 30) {
+                return { type: '平和倾向', status: '无明显偏颇', cls: 'no' };
+            }
+
+            const j = getJudgment(maxType, maxScore, results);
+            return { type: maxType, status: j.short, cls: j.cls };
+        }
+
+        // ================================================================
+        //  10. 展示结果
+        // ================================================================
+        function showResult() {
+            const results = computeResults();
+            const final = determineFinalType(results);
+            const p = state.profile;
+
+            // 计算年龄
+            let age = '--';
+            if (p.birth) {
+                const birthDate = new Date(p.birth);
+                const today = new Date();
+                age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                if (age < 0) age = '--';
+            }
+
+            const detail = CONST_DETAILS[final.type] || CONST_DETAILS['平和质'];
+
+            let html = `
+                <div class="fade-in">
+                    <div class="result-profile">
+                        <div class="rp-item"><div class="rp-label">姓名</div><div class="rp-value">${p.name || '--'}</div></div>
+                        <div class="rp-item"><div class="rp-label">性别</div><div class="rp-value">${p.gender || '--'}</div></div>
+                        <div class="rp-item"><div class="rp-label">年龄</div><div class="rp-value">${age} 岁</div></div>
+                        <div class="rp-item"><div class="rp-label">身高</div><div class="rp-value">${p.height || '--'} cm</div></div>
+                        <div class="rp-item"><div class="rp-label">体重</div><div class="rp-value">${p.weight || '--'} kg</div></div>
+                        <div class="rp-item"><div class="rp-label">腰围</div><div class="rp-value">${p.waist || '--'} cm</div></div>
+                        <div class="rp-item full" style="grid-column:1/-1;text-align:center;border-top:1px solid #e0d0c0;padding-top:8px;margin-top:4px;">
+                            <div class="rp-label">疾病史</div>
+                            <div class="rp-value" style="font-weight:400;">${p.history || '--'}</div>
+                        </div>
+                    </div>
+
+                    <div class="result-final" style="border-color:${CONST_COLORS[final.type] || '#d5c0b0'};">
+                        <div class="final-label">🏷️ 最终体质判定</div>
+                        <div class="final-type">${final.type}</div>
+                        <div class="final-status">${final.status}</div>
+                        <span class="final-badge ${final.cls}">${final.status}</span>
+                    </div>
+
+                    <div class="result-detail-section">
+                        <div class="section-title">📖 体质详解</div>
+                        <div class="detail-grid">
+                            <div class="dg-item full"><div class="dg-label">总体特征</div><div class="dg-value">${detail.summary || '--'}</div></div>
+                            <div class="dg-item"><div class="dg-label">形体特征</div><div class="dg-value">${detail.body || '--'}</div></div>
+                            <div class="dg-item"><div class="dg-label">心理特征</div><div class="dg-value">${detail.mind || '--'}</div></div>
+                            <div class="dg-item full"><div class="dg-label">常见表现</div><div class="dg-value">${detail.signs || '--'}</div></div>
+                            <div class="dg-item"><div class="dg-label">发病倾向</div><div class="dg-value">${detail.disease || '--'}</div></div>
+                            <div class="dg-item"><div class="dg-label">适应能力</div><div class="dg-value">${detail.adapt || '--'}</div></div>
+                        </div>
+                    </div>
+
+                    <div class="result-bars">
+                        <div style="font-size:14px;font-weight:600;color:#5d3a24;margin-bottom:10px;">📊 各体质转化分</div>
+            `;
+
+            for (const name of CONST_ORDER) {
+                const r = results[name];
+                if (!r) continue;
+                const pct = Math.min(r.transform, 100);
+                const color = CONST_COLORS[name] || '#8b5a3c';
+                const j = getJudgment(name, r.transform, results);
+                html += `
+                    <div class="rb-item">
+                        <span class="rb-name">${name}</span>
+                        <div class="rb-bar"><div class="rb-fill" style="width:${pct}%;background:${color};"></div></div>
+                        <span class="rb-score">${r.transform}</span>
+                        <span class="rb-tag">${j.short}</span>
+                    </div>
+                `;
+            }
+
+            html += `
+                    </div>
+
+                    <div class="result-actions">
+                        <button class="btn-retest" onclick="restart()">🔄 重新测评</button>
+                        <button class="btn-switch" onclick="switchVersion()">📋 切换版本</button>
+                    </div>
+                </div>
+            `;
+
+            resultWrap.innerHTML = html;
+            quizPage.classList.add('hidden');
+            resultPage.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ================================================================
+        //  11. 全局操作
+        // ================================================================
+        window.restart = function() {
+            resultPage.classList.add('hidden');
+            quizPage.classList.remove('hidden');
+            state.answers = new Array(state.totalQuestions).fill(0);
+            state.currentIndex = 0;
+            state.isTransitioning = false;
+            renderQuestion();
+            updateProgress();
+            updateNavButtons();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.switchVersion = function() {
+            resultPage.classList.add('hidden');
+            homePage.classList.remove('hidden');
+            quizPage.classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        // ================================================================
+        //  12. 键盘支持
+        // ================================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && !quizPage.classList.contains('hidden')) {
+                goPrev();
+            }
+            if (e.key >= '1' && e.key <= '5' && !quizPage.classList.contains('hidden')) {
+                const idx = state.currentIndex;
+                const score = parseInt(e.key);
+                if (state.answers[idx] !== score && !state.isTransitioning) {
+                    selectOption(idx, score);
+                }
+            }
+            if (e.key === 'Enter' && !homePage.classList.contains('hidden')) {
+                startBtn.click();
+            }
+        });
+
+        // ================================================================
+        //  13. 启动
+        // ================================================================
+        init();
+        console.log('🌿 九体质测评已加载 (自动跳转版)');
+        console.log('📌 支持 2009原版67题 / 2025新版30题');
+        console.log('⚠️ 本工具仅作亚健康养生参考，不可替代医疗诊断');
+    </script>
+
+</body>
+</html>
