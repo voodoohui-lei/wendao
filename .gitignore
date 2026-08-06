@@ -1,0 +1,34 @@
+# ============================================================
+# 经销商业绩查询系统 .gitignore
+# ============================================================
+
+# ---- 运行时数据（含密码哈希/真实手机号，绝不能进仓库）----
+dealer-system/data/*.db
+dealer-system/data/*.db-shm
+dealer-system/data/*.db-wal
+dealer-system/data/*.log
+dealer-system/data/.gitkeep
+
+# ---- 业务原始 Excel + 临时锁文件 ----
+*.xlsx
+~$*.xlsx
+_py_rows.json
+
+# ---- 运行时/工作过程产物 ----
+.workbuddy/
+*.tmp
+*.bak
+
+# ---- IDE / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- Node（虽然项目零依赖，但防御性保留）----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e293b">
+<title>业绩管理后台</title>
+<style>
+:root{
+  --primary:#0e7490; --primary-dark:#155e75; --primary-light:#ecfeff;
+  --dark:#1e293b; --green:#16a34a; --orange:#ea580c; --red:#dc2626;
+  --text:#0f172a; --text2:#475569; --text3:#94a3b8;
+  --bg:#f1f5f9; --card:#fff; --line:#e2e8f0;
+  --radius:14px; --shadow:0 1px 3px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;font-size:15px;padding-bottom:env(safe-area-inset-bottom)}
+button{font-family:inherit;cursor:pointer;border:none;background:none;font-size:15px}
+input,select{font-family:inherit;font-size:16px}
+.hide{display:none!important}
+
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:linear-gradient(160deg,#1e293b 0%,#0f172a 100%)}
+.auth-card{width:100%;max-width:400px;background:var(--card);border-radius:20px;padding:32px 26px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.brand svg{width:32px;height:32px;flex:none}
+.brand h1{font-size:19px;font-weight:700}
+.brand-sub{color:var(--text3);font-size:13px;margin-bottom:22px}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.field input,.field select{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;min-height:46px;background:#fff}
+.field input:focus,.field select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(14,116,144,.1)}
+.btn{width:100%;padding:13px;background:var(--primary);color:#fff;border-radius:10px;font-weight:600;font-size:16px;min-height:48px}
+.btn:hover{background:var(--primary-dark)} .btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-sec{background:#fff;color:var(--text2);border:1.5px solid var(--line)} .btn-sec:hover{background:var(--bg)}
+.btn-danger{background:var(--red)} .btn-danger:hover{background:#b91c1c}
+.msg{padding:11px 13px;border-radius:9px;font-size:13.5px;margin-bottom:14px}
+.msg.err{background:#fef2f2;color:#991b1b} .msg.ok{background:#f0fdf4;color:#166534}
+.msg.warn{background:#fffbeb;color:#92400e} .msg.info{background:var(--primary-light);color:var(--primary-dark)}
+
+.top{background:var(--dark);position:sticky;top:0;z-index:50}
+.top-in{max-width:1400px;margin:0 auto;padding:11px 16px;display:flex;align-items:center;gap:12px}
+.top .brand h1{font-size:16px;color:#fff} .top .brand-sub{display:none}
+.spacer{flex:1}
+.top .who{color:#cbd5e1;font-size:13px}
+.top button{color:#cbd5e1;padding:7px 12px;border-radius:8px;font-size:13.5px;border:1px solid #334155}
+.top button:hover{background:#334155;color:#fff}
+.navbar{background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:53px;z-index:49}
+.navbar-in{max-width:1400px;margin:0 auto;display:flex;gap:2px;padding:0 10px;min-width:max-content}
+.navbar button{padding:13px 15px;color:var(--text2);font-size:14px;font-weight:600;border-bottom:2.5px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.navbar button svg{width:16px;height:16px}
+.navbar button.on{color:var(--primary);border-bottom-color:var(--primary)}
+main{max-width:1400px;margin:0 auto;padding:16px}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--card);border-radius:var(--radius);padding:15px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.card .lab{font-size:12.5px;color:var(--text2);margin-bottom:6px}
+.card .val{font-size:23px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.card .sub{font-size:11.5px;color:var(--text3);margin-top:2px}
+.c-green .val{color:var(--green)} .c-orange .val{color:var(--orange)}
+.c-primary .val{color:var(--primary)} .c-red .val{color:var(--red)}
+
+.panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:16px;overflow:hidden}
+.panel-h{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.panel-h h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px}
+.panel-h h2 svg{width:16px;height:16px;color:var(--primary)}
+.panel-b{padding:16px}
+.ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ctrl select,.ctrl input{padding:8px 11px;border:1.5px solid var(--line);border-radius:9px;font-size:14px;min-height:40px;background:#fff}
+.mini{padding:8px 13px;border-radius:9px;border:1.5px solid var(--line);color:var(--text2);font-size:13.5px;font-weight:600;min-height:40px;display:inline-flex;align-items:center;gap:6px;background:#fff}
+.mini:hover{border-color:var(--primary);color:var(--primary)}
+.mini svg{width:15px;height:15px}
+.mini.pri{background:var(--primary);color:#fff;border-color:var(--primary)} .mini.pri:hover{background:var(--primary-dark)}
+.mini.danger{color:var(--red);border-color:#fecaca} .mini.danger:hover{background:#fef2f2}
+.mini.sm{padding:5px 10px;min-height:32px;font-size:12.5px}
+
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;padding:10px 12px;background:#f8fafc;color:var(--text2);font-size:12.5px;font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9;white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:#fafcfd}
+.num{text-align:right;font-weight:600} .money{color:var(--green)} .comm{color:var(--orange)}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:600;background:var(--primary-light);color:var(--primary-dark)}
+.tag.na{background:#fef2f2;color:#991b1b} .tag.on{background:#f0fdf4;color:#166534}
+.tag.off{background:#f1f5f9;color:#64748b} .tag.warn{background:#fffbeb;color:#92400e}
+.pager{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;flex-wrap:wrap}
+.pager button{padding:7px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:13.5px;color:var(--text2);min-height:38px;background:#fff}
+.pager button:disabled{opacity:.4;cursor:not-allowed}
+.pager .info{font-size:13px;color:var(--text3)}
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+
+.drop{border:2px dashed #cbd5e1;border-radius:var(--radius);padding:34px 20px;text-align:center;
+  background:#fafcfd;transition:.2s;cursor:pointer}
+.drop:hover,.drop.over{border-color:var(--primary);background:var(--primary-light)}
+.drop svg{width:42px;height:42px;color:var(--primary);margin-bottom:10px}
+.drop h3{font-size:15.5px;margin-bottom:5px}
+.drop p{font-size:13px;color:var(--text3)}
+.prev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0}
+.prev-item{background:#f8fafc;border-radius:10px;padding:11px;text-align:center}
+.prev-item .v{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+.prev-item .l{font-size:11.5px;color:var(--text2)}
+.radio-row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.radio-card{flex:1;min-width:210px;border:1.5px solid var(--line);border-radius:11px;padding:12px;cursor:pointer;transition:.15s}
+.radio-card:hover{border-color:var(--primary)}
+.radio-card.on{border-color:var(--primary);background:var(--primary-light)}
+.radio-card b{font-size:14px;display:block;margin-bottom:3px}
+.radio-card span{font-size:12.5px;color:var(--text2)}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
+.modal-in{background:var(--card);border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:90vh;overflow:auto}
+.modal-in h3{font-size:17px;margin-bottom:15px}
+.bar{height:8px;background:#f1f5f9;border-radius:5px;overflow:hidden;margin-top:5px}
+.bar div{height:100%;background:linear-gradient(90deg,#0e7490,#22d3ee);transition:width .3s}
+@media(max-width:640px){
+  main{padding:12px}
+  .card .val{font-size:19px}
+  .top .who{display:none}
+  .panel-h{padding:12px 13px} .panel-b{padding:13px}
+  td,th{padding:9px 10px;font-size:12.5px}
+}
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="auth" class="auth-wrap">
+  <div class="auth-card">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0e7490" stroke-width="1.8" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+      <h1>业绩管理后台</h1>
+    </div>
+    <p class="brand-sub">管理员专用入口</p>
+    <div id="authMsg"></div>
+    <form onsubmit="doLogin(event)">
+      <div class="field"><label>管理员账号</label><input id="u" value="admin" autocomplete="username"></div>
+      <div class="field"><label>密码</label><input id="p" type="password" autocomplete="current-password"></div>
+      <button class="btn" type="submit" id="btnL">登 录</button>
+    </form>
+    <p style="font-size:12.5px;color:#94a3b8;margin-top:14px;text-align:center">初始账号 admin / admin888，登录后请立即修改</p>
+  </div>
+</div>
+
+<!-- 后台 -->
+<div id="app" class="hide">
+  <header class="top"><div class="top-in">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+      <h1>业绩管理后台</h1>
+    </div>
+    <div class="spacer"></div>
+    <span class="who" id="who"></span>
+    <button onclick="openPwd()">修改密码</button>
+    <button onclick="logout()">退出</button>
+  </div></header>
+
+  <nav class="navbar"><div class="navbar-in">
+    <button class="on" data-t="dash" onclick="go('dash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>数据概览</button>
+    <button data-t="import" onclick="go('import')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>Excel 导入</button>
+    <button data-t="ledger" onclick="go('ledger')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>全量台账</button>
+    <button data-t="dealers" onclick="go('dealers')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg>账号管理</button>
+    <button data-t="batch" onclick="go('batch')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>导入记录</button>
+    <button data-t="audit" onclick="go('audit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg>操作日志</button>
+  </div></nav>
+
+  <main>
+    <!-- 概览 -->
+    <section id="v-dash">
+      <div class="cards" id="dashCards"></div>
+      <div class="panel"><div class="panel-h"><h2>各周期业绩汇总</h2></div>
+        <div class="tw"><table><thead><tr><th>业绩周期</th><th class="num">记录数</th><th class="num">业绩金额</th><th class="num">佣金</th></tr></thead><tbody id="periodBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- 导入 -->
+    <section id="v-import" class="hide">
+      <div class="panel">
+        <div class="panel-h"><h2>上传业绩 Excel</h2></div>
+        <div class="panel-b">
+          <div id="importMsg"></div>
+          <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>
+            <h3>点击选择，或将文件拖到此处</h3>
+            <p>支持 .xlsx / .csv，需包含 12 个标准字段。最大 30MB</p>
+          </div>
+          <input type="file" id="file" accept=".xlsx,.csv" class="hide" onchange="onFile(this.files[0])">
+
+          <div id="preview" class="hide">
+            <div class="prev-grid" id="prevGrid"></div>
+            <div class="radio-row">
+              <div class="radio-card on" id="mAppend" onclick="setMode('append')">
+                <b>追加导入（推荐）</b><span>新增数据，完全重复的行自动跳过，不影响已有数据</span>
+              </div>
+              <div class="radio-card" id="mReplace" onclick="setMode('replace_period')">
+                <b>按周期覆盖</b><span>先删除文件中出现的周期的全部旧数据，再导入。用于更正已导错的月份</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-sec" onclick="cancelImport()">取消</button>
+              <button class="btn" id="btnDoImport" onclick="doImport()">确认导入</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-h"><h2>字段格式要求</h2></div>
+        <div class="panel-b" style="font-size:13.5px;color:var(--text2)">
+          <p style="margin-bottom:8px">第一行必须是表头，包含以下 12 列（顺序不限，名称可含少量差异）：</p>
+          <p style="line-height:2"><span class="tag">用户ID</span> <span class="tag">昵称</span> <span class="tag">姓名</span> <span class="tag">代理等级</span> <span class="tag">业绩周期</span> <span class="tag">归属高级ID</span> <span class="tag">归属高级昵称</span> <span class="tag">归属高级姓名</span> <span class="tag">电话</span> <span class="tag">归属高级等级</span> <span class="tag">金额</span> <span class="tag">佣金</span></p>
+          <p style="margin-top:10px">· <b>电话</b>为归属高级手机号，是经销商注册与数据隔离的唯一依据；<b>#N/A</b> 或空值会被记为「无手机号数据」，仅本后台可见，经销商端不可见。</p>
+          <p>· <b>业绩周期</b>支持 2026-07-01、2026/7/1、2026年7月 及 Excel 日期格式。</p>
+          <p>· <b>金额/佣金</b>为空按 0 计。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 台账 -->
+    <section id="v-ledger" class="hide">
+      <div class="panel">
+        <div class="panel-h">
+          <h2>全量业绩台账</h2><div class="spacer"></div>
+          <div class="ctrl">
+            <select id="lPeriod" onchange="lReload(1)"><option value="">全部周期</option></select>
+            <select id="lNa" onchange="lReload(1)"><option value="">全部数据</option><option value="1">仅看无手机号(#N/A)</option></select>
+            <input type="search" id="lKw" placeholder="搜索 姓名/ID/手机号" oninput="lDebounce()">
+            <button class="mini pri" onclick="exportCsv()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>导出 CSV</button>
+          </div>
+        </div>
+        <div class="panel-b" style="padding:10px 16px;border-bottom:1px solid var(--line);font-size:13.5px" id="lAgg"></div>
+        <div class="tw"><table>
+          <thead><tr><th>用户ID</th><th>昵称</th><th>姓名</th><th>代理等级</th><th>业绩周期</th>
+            <th>归属高级ID</th><th>归属高级昵称</th><th>归属高级姓名</th><th>电话</th><th>归属高级等级</th>
+            <th class="num">金额</th><th class="num">佣金</th></tr></thead>
+          <tbody id="lBody"></tbody></table></div>
+        <div class="pager" id="lPager"></div>
+      </div>
+    </section>
+
+    <!-- 账号 -->
+    <section id="v-dealers" class="hide">
+      <div class="panel">
+        <div class="panel-h"><h2>经销商账号</h2><div class="spacer"></div>
+          <div class="ctrl"><input type="search" id="dKw" placeholder="搜索 手机号/姓名" oninput="dDebounce()"></div>
+        </div>
+        <div class="panel-b" style="padding:10px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--text2)">
+          共 <b id="dTotal">0</b> 个手机号在业绩表中（即可注册人数），已注册 <b id="dReg">0</b> 个
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>手机号</th><th>姓名</th><th class="num">业绩条数</th><th class="num">业绩金额</th>
+            <th class="num">佣金</th><th>注册状态</th><th>最近登录</th><th>登录次数</th><th>操作</th></tr></thead>
+          <tbody id="dBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- 批次 -->
+    <section id="v-batch" class="hide">
+      <div class="panel"><div class="panel-h"><h2>导入记录</h2></div>
+        <div class="tw"><table>
+          <thead><tr><th>#</th><th>文件名</th><th>模式</th><th>周期</th><th class="num">总行数</th>
+            <th class="num">入库</th><th class="num">跳过重复</th><th class="num">无手机号</th><th>操作人</th><th>时间</th><th>操作</th></tr></thead>
+          <tbody id="bBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- 日志 -->
+    <section id="v-audit" class="hide">
+      <div class="panel"><div class="panel-h"><h2>操作日志（最近 200 条）</h2></div>
+        <div class="tw"><table>
+          <thead><tr><th>时间</th><th>角色</th><th>账号</th><th>动作</th><th>详情</th><th>IP</th></tr></thead>
+          <tbody id="aBody"></tbody></table></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="pwdModal" class="modal hide"><div class="modal-in">
+  <h3>修改管理员密码</h3><div id="pwdMsg"></div>
+  <div class="field"><label>原密码</label><input type="password" id="oldPwd"></div>
+  <div class="field"><label>新密码</label><input type="password" id="newPwd" placeholder="8-64 位"></div>
+  <div class="field"><label>确认新密码</label><input type="password" id="newPwd2"></div>
+  <div style="display:flex;gap:10px"><button class="btn btn-sec" onclick="closePwd()">取消</button><button class="btn" onclick="savePwd()">确认</button></div>
+</div></div>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => '¥' + Number(n || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtK = (n) => { n = Number(n || 0); return n >= 10000 ? '¥' + (n / 10000).toFixed(1) + '万' : fmt(n); };
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function showMsg(el, t, x) { $(el).innerHTML = x ? `<div class="msg ${t}">${esc(x)}</div>` : ''; }
+function showHtml(el, t, x) { $(el).innerHTML = x ? `<div class="msg ${t}">${x}</div>` : ''; }
+
+/* 全局错误可视化：任何 JS 异常直接显示在页面顶部，不再静默失败 */
+function fatal(msg) {
+  let bar = document.getElementById('fatalBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'fatalBar';
+    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:#fff;' +
+      'padding:10px 14px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+    document.body.appendChild(bar);
+  }
+  bar.textContent = '页面异常（请截图反馈）：' + msg;
+}
+window.addEventListener('error', (e) => fatal((e.message || '未知错误') + ' @ ' + (e.filename || '') + ':' + (e.lineno || '')));
+window.addEventListener('unhandledrejection', (e) => fatal('未捕获的异步错误：' + ((e.reason && e.reason.message) || e.reason || '')));
+
+async function api(url, opts) {
+  // credentials 显式声明 same-origin，确保会话 Cookie 一定随请求发送
+  const r = await fetch(url, Object.assign({ credentials: 'same-origin', headers: { 'Content-Type': 'application/json' } }, opts));
+  let d = {}; try { d = await r.json(); } catch (e) { throw new Error('服务器无响应（HTTP ' + r.status + '）'); }
+  if (!r.ok || !d.ok) throw new Error(d.error || ('请求失败 ' + r.status));
+  return d;
+}
+
+async function doLogin(ev) {
+  ev.preventDefault(); $('btnL').disabled = true;
+  try {
+    const d = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ username: $('u').value.trim(), password: $('p').value }) });
+    enter(d);
+  } catch (e) { showMsg('authMsg', 'err', e.message); }
+  $('btnL').disabled = false;
+}
+async function logout() { await api('/api/admin/logout', { method: 'POST' }).catch(() => {}); location.reload(); }
+
+function enter(me) {
+  $('auth').classList.add('hide'); $('app').classList.remove('hide');
+  $('who').textContent = me.username;
+  if (me.mustChange) { openPwd(); showMsg('pwdMsg', 'warn', '您正在使用初始密码，请立即修改'); }
+  go('dash');
+}
+
+let cur = 'dash';
+function go(t) {
+  cur = t;
+  document.querySelectorAll('.navbar button').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
+  ['dash', 'import', 'ledger', 'dealers', 'batch', 'audit'].forEach((k) => $('v-' + k).classList.toggle('hide', k !== t));
+  if (t === 'dash') loadDash();
+  if (t === 'ledger') { loadPeriods(); lReload(1); }
+  if (t === 'dealers') loadDealers();
+  if (t === 'batch') loadBatch();
+  if (t === 'audit') loadAudit();
+}
+
+/* ---------- 概览 ---------- */
+async function loadDash() {
+  const d = await api('/api/admin/stats');
+  const s = d.stats;
+  $('dashCards').innerHTML = `
+    <div class="card c-green"><div class="lab">业绩总金额</div><div class="val">${fmtK(s.amount)}</div><div class="sub">全部周期累计</div></div>
+    <div class="card c-orange"><div class="lab">佣金总额</div><div class="val">${fmtK(s.commission)}</div></div>
+    <div class="card"><div class="lab">业绩记录</div><div class="val">${s.rows}</div><div class="sub">${s.agents} 个门店代理</div></div>
+    <div class="card c-primary"><div class="lab">可注册手机号</div><div class="val">${s.phones}</div><div class="sub">有效归属高级手机号</div></div>
+    <div class="card"><div class="lab">已注册账号</div><div class="val">${d.dealers.total}</div><div class="sub">启用 ${d.dealers.active} · 未注册 ${d.dealers.unregistered}</div></div>
+    <div class="card c-red"><div class="lab">无手机号数据</div><div class="val">${s.naRows}</div><div class="sub">#N/A，仅后台可见</div></div>`;
+  $('periodBody').innerHTML = d.periods.length ? d.periods.map((p) => `<tr><td><b>${esc(p.period)}</b></td>
+    <td class="num">${p.rows}</td><td class="num money">${fmt(p.amount)}</td><td class="num comm">${fmt(p.commission)}</td></tr>`).join('')
+    : `<tr><td colspan="4" class="empty">暂无数据，请先导入 Excel</td></tr>`;
+}
+
+/* ---------- 导入 ---------- */
+let pendingFile = null, importMode = 'append';
+const drop = $('drop');
+['dragenter', 'dragover'].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', (ev) => { const f = ev.dataTransfer.files[0]; if (f) onFile(f); });
+
+function setMode(m) {
+  importMode = m;
+  $('mAppend').classList.toggle('on', m === 'append');
+  $('mReplace').classList.toggle('on', m === 'replace_period');
+}
+function cancelImport() { pendingFile = null; $('preview').classList.add('hide'); $('file').value = ''; showMsg('importMsg', '', ''); }
+
+function toB64(buf) {
+  const b = new Uint8Array(buf); let s = '';
+  const CH = 0x8000;
+  for (let i = 0; i < b.length; i += CH) s += String.fromCharCode.apply(null, b.subarray(i, i + CH));
+  return btoa(s);
+}
+
+async function onFile(f) {
+  if (!f) return;
+  if (f.size > 30 * 1024 * 1024) return showMsg('importMsg', 'err', '文件超过 30MB');
+  showMsg('importMsg', 'info', '正在解析 ' + f.name + ' …');
+  pendingFile = { name: f.name, b64: toB64(await f.arrayBuffer()) };
+  try {
+    const d = await api('/api/admin/import', { method: 'POST', body: JSON.stringify({ filename: f.name, data: pendingFile.b64, preview: true }) });
+    $('prevGrid').innerHTML = `
+      <div class="prev-item"><div class="v">${d.total}</div><div class="l">有效数据行</div></div>
+      <div class="prev-item"><div class="v" style="color:#0e7490">${d.phones}</div><div class="l">涉及手机号</div></div>
+      <div class="prev-item"><div class="v" style="color:${d.naRows ? '#dc2626' : '#16a34a'}">${d.naRows}</div><div class="l">无手机号(#N/A)</div></div>
+      <div class="prev-item"><div class="v" style="color:#16a34a;font-size:16px">${fmtK(d.amount)}</div><div class="l">业绩合计</div></div>
+      <div class="prev-item"><div class="v" style="color:#ea580c;font-size:16px">${fmtK(d.commission)}</div><div class="l">佣金合计</div></div>
+      <div class="prev-item"><div class="v" style="font-size:14px">${d.periods.map(esc).join('<br>')}</div><div class="l">业绩周期</div></div>`;
+    $('preview').classList.remove('hide');
+    let warn = '';
+    if (d.invalid && d.invalid.length) warn = `已跳过 ${d.invalid.length} 行无效数据（第 ${d.invalid.slice(0, 5).map((x) => x.line).join('、')} 行等）`;
+    showMsg('importMsg', warn ? 'warn' : 'ok', warn || `解析成功，共 ${d.total} 行。请确认下方信息后导入。`);
+  } catch (e) { showMsg('importMsg', 'err', e.message); $('preview').classList.add('hide'); }
+}
+
+async function doImport() {
+  if (!pendingFile) return;
+  if (importMode === 'replace_period' && !confirm('「按周期覆盖」会先删除该周期的全部已有数据，确认继续？')) return;
+  $('btnDoImport').disabled = true;
+  showMsg('importMsg', 'info', '正在导入，请勿关闭页面…');
+  try {
+    const d = await api('/api/admin/import', { method: 'POST', body: JSON.stringify({ filename: pendingFile.name, data: pendingFile.b64, mode: importMode }) });
+    showHtml('importMsg', 'ok', `<b>导入完成</b>：新增入库 <b>${d.inserted}</b> 行，跳过重复 ${d.duplicated} 行，无手机号 ${d.naRows} 行，周期 ${d.periods.map(esc).join('、')}`);
+    cancelImport(); loadDash();
+  } catch (e) { showMsg('importMsg', 'err', e.message); }
+  $('btnDoImport').disabled = false;
+}
+
+/* ---------- 台账 ---------- */
+let lPage = 1, lt = null;
+function lDebounce() { clearTimeout(lt); lt = setTimeout(() => lReload(1), 350); }
+async function loadPeriods() {
+  const d = await api('/api/admin/stats');
+  $('lPeriod').innerHTML = '<option value="">全部周期</option>' + d.periods.map((p) => `<option value="${esc(p.period)}">${esc(p.period)}</option>`).join('');
+}
+async function lReload(p) {
+  lPage = p || lPage;
+  const q = new URLSearchParams({ period: $('lPeriod').value, kw: $('lKw').value.trim(), onlyNa: $('lNa').value, page: lPage, size: 30 });
+  const d = await api('/api/admin/records?' + q);
+  $('lAgg').innerHTML = `筛选结果：<b>${d.total}</b> 条 · 金额 <b class="money">${fmt(d.agg.amount)}</b> · 佣金 <b class="comm">${fmt(d.agg.commission)}</b>`;
+  $('lBody').innerHTML = d.rows.length ? d.rows.map((r) => `<tr>
+    <td>${esc(r.user_id)}</td><td>${esc(r.nickname)}</td><td>${esc(r.name)}</td>
+    <td><span class="tag">${esc(r.agent_level)}</span></td><td>${esc(r.period)}</td>
+    <td>${esc(r.senior_id)}</td><td>${esc(r.senior_nickname)}</td><td>${esc(r.senior_name)}</td>
+    <td>${r.phone ? esc(r.phone) : `<span class="tag na">${esc(r.phone_raw || '#N/A')}</span>`}</td>
+    <td>${esc(r.senior_level)}</td><td class="num money">${fmt(r.amount)}</td><td class="num comm">${fmt(r.commission)}</td></tr>`).join('')
+    : `<tr><td colspan="12" class="empty">没有匹配的数据</td></tr>`;
+  $('lPager').innerHTML = d.total ? `
+    <button onclick="lReload(1)" ${d.page <= 1 ? 'disabled' : ''}>首页</button>
+    <button onclick="lReload(${d.page - 1})" ${d.page <= 1 ? 'disabled' : ''}>上一页</button>
+    <span class="info">第 ${d.page} / ${d.pages} 页 · 共 ${d.total} 条</span>
+    <button onclick="lReload(${d.page + 1})" ${d.page >= d.pages ? 'disabled' : ''}>下一页</button>
+    <button onclick="lReload(${d.pages})" ${d.page >= d.pages ? 'disabled' : ''}>末页</button>` : '';
+}
+function exportCsv() {
+  const q = new URLSearchParams({ period: $('lPeriod').value, kw: $('lKw').value.trim(), onlyNa: $('lNa').value });
+  location.href = '/api/admin/export.csv?' + q;
+}
+
+/* ---------- 账号 ---------- */
+let dt = null;
+function dDebounce() { clearTimeout(dt); dt = setTimeout(loadDealers, 350); }
+async function loadDealers() {
+  const d = await api('/api/admin/dealers?kw=' + encodeURIComponent($('dKw').value.trim()));
+  $('dTotal').textContent = d.rows.length;
+  $('dReg').textContent = d.rows.filter((r) => r.registered).length;
+  $('dBody').innerHTML = d.rows.length ? d.rows.map((r) => `<tr>
+    <td><b>${esc(r.phone)}</b></td><td>${esc(r.name)}</td><td class="num">${r.rows}</td>
+    <td class="num money">${fmt(r.amount)}</td><td class="num comm">${fmt(r.commission)}</td>
+    <td>${r.registered ? (r.status === 'active' ? '<span class="tag on">已注册</span>' : '<span class="tag off">已停用</span>') : '<span class="tag warn">未注册</span>'}</td>
+    <td>${esc(r.last_login || '—')}</td><td class="num">${r.login_count || 0}</td>
+    <td>${r.registered ? `
+      <button class="mini sm" onclick="act('${r.phone}','toggle')">${r.status === 'active' ? '停用' : '启用'}</button>
+      <button class="mini sm" onclick="act('${r.phone}','reset')">重置密码</button>
+      <button class="mini sm danger" onclick="act('${r.phone}','delete')">删除账号</button>` : '<span style="color:#94a3b8">—</span>'}</td></tr>`).join('')
+    : `<tr><td colspan="9" class="empty">暂无数据</td></tr>`;
+}
+async function act(phone, action) {
+  const txt = { toggle: '切换该账号的启用状态', reset: '重置该账号密码', delete: '删除该账号（业绩数据保留，用户可重新注册）' }[action];
+  if (!confirm(`确认${txt}？\n手机号：${phone}`)) return;
+  try {
+    const d = await api('/api/admin/dealer-action', { method: 'POST', body: JSON.stringify({ phone, action }) });
+    if (d.tempPassword) alert(`密码已重置\n\n临时密码：${d.tempPassword}\n\n请告知该经销商，并提醒登录后立即修改。`);
+    loadDealers();
+  } catch (e) { alert(e.message); }
+}
+
+/* ---------- 批次 / 日志 ---------- */
+async function loadBatch() {
+  const d = await api('/api/admin/batches');
+  $('bBody').innerHTML = d.rows.length ? d.rows.map((r) => `<tr>
+    <td>${r.id}</td><td>${esc(r.filename)}</td>
+    <td>${r.mode === 'append' ? '追加' : '<span class="tag warn">周期覆盖</span>'}</td>
+    <td>${esc(r.periods)}</td><td class="num">${r.total_rows}</td><td class="num" style="color:#16a34a">${r.inserted}</td>
+    <td class="num">${r.duplicated}</td><td class="num">${r.na_rows}</td><td>${esc(r.operator)}</td><td>${esc(r.created_at)}</td>
+    <td><button class="mini sm danger" onclick="delBatch(${r.id},${r.inserted})">撤销本次</button></td></tr>`).join('')
+    : `<tr><td colspan="11" class="empty">暂无导入记录</td></tr>`;
+}
+async function delBatch(id, n) {
+  if (!confirm(`撤销导入批次 #${id}，将删除本次入库的 ${n} 行业绩数据。\n此操作不可恢复，确认继续？`)) return;
+  try { const d = await api('/api/admin/delete-batch', { method: 'POST', body: JSON.stringify({ batchId: id }) });
+    alert(`已删除 ${d.deleted} 行`); loadBatch(); } catch (e) { alert(e.message); }
+}
+async function loadAudit() {
+  const d = await api('/api/admin/audit');
+  const M = { login: '登录', login_fail: '登录失败', logout: '退出', register: '注册', register_reject: '注册被拒',
+    import: '导入数据', export: '导出台账', export_self: '导出本人数据', change_password: '修改密码',
+    dealer_active: '启用账号', dealer_disabled: '停用账号', dealer_reset_pwd: '重置密码', dealer_delete: '删除账号', delete_batch: '撤销批次' };
+  $('aBody').innerHTML = d.rows.length ? d.rows.map((r) => `<tr>
+    <td>${esc(r.ts)}</td><td>${r.role === 'admin' ? '<span class="tag">管理员</span>' : '<span class="tag on">经销商</span>'}</td>
+    <td>${esc(r.actor)}</td><td>${esc(M[r.action] || r.action)}</td>
+    <td style="white-space:normal;max-width:380px">${esc(r.detail)}</td><td>${esc(r.ip)}</td></tr>`).join('')
+    : `<tr><td colspan="6" class="empty">暂无日志</td></tr>`;
+}
+
+/* ---------- 密码 ---------- */
+function openPwd() { $('pwdModal').classList.remove('hide'); }
+function closePwd() { $('pwdModal').classList.add('hide'); $('oldPwd').value = $('newPwd').value = $('newPwd2').value = ''; }
+async function savePwd() {
+  const n = $('newPwd').value;
+  if (n.length < 8) return showMsg('pwdMsg', 'err', '新密码至少 8 位');
+  if (n !== $('newPwd2').value) return showMsg('pwdMsg', 'err', '两次输入不一致');
+  try {
+    await api('/api/admin/change-password', { method: 'POST', body: JSON.stringify({ oldPassword: $('oldPwd').value, newPassword: n }) });
+    alert('密码已修改'); closePwd();
+  } catch (e) { showMsg('pwdMsg', 'err', e.message); }
+}
+
+(async function () {
+  try { const me = await api('/api/admin/me'); enter(me); }
+  catch (e) { $('auth').classList.remove('hide'); }
+})();
+</script>
+</body>
+</html>
