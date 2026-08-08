@@ -268,18 +268,18 @@ const routes = {
     return ok(res, { message: '密码修改成功，请重新登录' });
   },
 
-  /* ---------- 经销商：数据查询（行级隔离）---------- */
+  /* ---------- 经销商：数据查询（行级隔离）。
+   注意：经销商端不展示佣金，API 也不再返回 commission 字段。---------- */
   'GET /api/dealer/summary': async (req, res, q) => {
     const c = requireDealer(req, res); if (!c) return;
     const { sql, params } = buildDealerWhere(c.phone, { period: q.period });
     const t = db.prepare(`SELECT COUNT(*) rows, COUNT(DISTINCT user_id) agents,
-        COALESCE(SUM(amount),0) amount, COALESCE(SUM(commission),0) commission
+        COALESCE(SUM(amount),0) amount
       FROM performance WHERE ${sql}`).get(...params);
-    const byPeriod = db.prepare(`SELECT period, COUNT(*) rows, COALESCE(SUM(amount),0) amount,
-        COALESCE(SUM(commission),0) commission
+    const byPeriod = db.prepare(`SELECT period, COUNT(*) rows, COALESCE(SUM(amount),0) amount
       FROM performance WHERE phone=? GROUP BY period ORDER BY period DESC`).all(c.phone);
     const top = db.prepare(`SELECT user_id, MAX(name) name, MAX(nickname) nickname,
-        SUM(amount) amount, SUM(commission) commission
+        SUM(amount) amount
       FROM performance WHERE ${sql} GROUP BY user_id ORDER BY amount DESC LIMIT 10`).all(...params);
     return ok(res, { total: t, byPeriod, top });
   },
@@ -290,10 +290,11 @@ const routes = {
     const size = Math.min(100, Math.max(10, num(q.size, 20)));
     const { sql, params } = buildDealerWhere(c.phone, { period: q.period, kw: (q.kw || '').trim() });
     const total = db.prepare(`SELECT COUNT(*) c FROM performance WHERE ${sql}`).get(...params).c;
-    const sortMap = { amount: 'amount', commission: 'commission', period: 'period', user_id: 'user_id' };
+    // commission 已对经销商隐藏，不再作为排序维度
+    const sortMap = { amount: 'amount', period: 'period', user_id: 'user_id' };
     const sort = sortMap[q.sort] || 'amount';
     const dir = q.dir === 'asc' ? 'ASC' : 'DESC';
-    const rows = db.prepare(`SELECT user_id,nickname,name,agent_level,period,amount,commission
+    const rows = db.prepare(`SELECT user_id,nickname,name,agent_level,period,amount
       FROM performance WHERE ${sql} ORDER BY ${sort} ${dir}, id ASC LIMIT ? OFFSET ?`)
       .all(...params, size, (page - 1) * size);
     return ok(res, { rows, total, page, size, pages: Math.ceil(total / size) || 1 });
