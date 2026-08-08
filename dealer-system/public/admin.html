@@ -167,7 +167,7 @@ tbody tr:hover{background:#fafcfd}
     <section id="v-dash">
       <div class="cards" id="dashCards"></div>
       <div class="panel"><div class="panel-h"><h2>各周期业绩汇总</h2></div>
-        <div class="tw"><table><thead><tr><th>业绩周期</th><th class="num">记录数</th><th class="num">业绩金额</th><th class="num">佣金</th></tr></thead><tbody id="periodBody"></tbody></table></div>
+        <div class="tw"><table><thead><tr><th>业绩周期</th><th class="num">记录数</th><th class="num">业绩金额</th></tr></thead><tbody id="periodBody"></tbody></table></div>
       </div>
     </section>
 
@@ -228,7 +228,7 @@ tbody tr:hover{background:#fafcfd}
         <div class="tw"><table>
           <thead><tr><th>用户ID</th><th>昵称</th><th>姓名</th><th>代理等级</th><th>业绩周期</th>
             <th>归属高级ID</th><th>归属高级昵称</th><th>归属高级姓名</th><th>电话</th><th>归属高级等级</th>
-            <th class="num">金额</th><th class="num">佣金</th></tr></thead>
+            <th class="num">金额</th></tr></thead>
           <tbody id="lBody"></tbody></table></div>
         <div class="pager" id="lPager"></div>
       </div>
@@ -245,7 +245,7 @@ tbody tr:hover{background:#fafcfd}
         </div>
         <div class="tw"><table>
           <thead><tr><th>手机号</th><th>姓名</th><th class="num">业绩条数</th><th class="num">业绩金额</th>
-            <th class="num">佣金</th><th>注册状态</th><th>最近登录</th><th>登录次数</th><th>操作</th></tr></thead>
+            <th>注册状态</th><th>最近登录</th><th>登录次数</th><th>操作</th></tr></thead>
           <tbody id="dBody"></tbody></table></div>
       </div>
     </section>
@@ -346,14 +346,13 @@ async function loadDash() {
   const s = d.stats;
   $('dashCards').innerHTML = `
     <div class="card c-green"><div class="lab">业绩总金额</div><div class="val">${fmtK(s.amount)}</div><div class="sub">全部周期累计</div></div>
-    <div class="card c-orange"><div class="lab">佣金总额</div><div class="val">${fmtK(s.commission)}</div></div>
     <div class="card"><div class="lab">业绩记录</div><div class="val">${s.rows}</div><div class="sub">${s.agents} 个门店代理</div></div>
     <div class="card c-primary"><div class="lab">可注册手机号</div><div class="val">${s.phones}</div><div class="sub">有效归属高级手机号</div></div>
     <div class="card"><div class="lab">已注册账号</div><div class="val">${d.dealers.total}</div><div class="sub">启用 ${d.dealers.active} · 未注册 ${d.dealers.unregistered}</div></div>
     <div class="card c-red"><div class="lab">无手机号数据</div><div class="val">${s.naRows}</div><div class="sub">#N/A，仅后台可见</div></div>`;
   $('periodBody').innerHTML = d.periods.length ? d.periods.map((p) => `<tr><td><b>${esc(p.period)}</b></td>
-    <td class="num">${p.rows}</td><td class="num money">${fmt(p.amount)}</td><td class="num comm">${fmt(p.commission)}</td></tr>`).join('')
-    : `<tr><td colspan="4" class="empty">暂无数据，请先导入 Excel</td></tr>`;
+    <td class="num">${p.rows}</td><td class="num money">${fmt(p.amount)}</td></tr>`).join('')
+    : `<tr><td colspan="3" class="empty">暂无数据，请先导入 Excel</td></tr>`;
 }
 
 /* ---------- 导入 ---------- */
@@ -389,7 +388,6 @@ async function onFile(f) {
       <div class="prev-item"><div class="v" style="color:#0e7490">${d.phones}</div><div class="l">涉及手机号</div></div>
       <div class="prev-item"><div class="v" style="color:${d.naRows ? '#dc2626' : '#16a34a'}">${d.naRows}</div><div class="l">无手机号(#N/A)</div></div>
       <div class="prev-item"><div class="v" style="color:#16a34a;font-size:16px">${fmtK(d.amount)}</div><div class="l">业绩合计</div></div>
-      <div class="prev-item"><div class="v" style="color:#ea580c;font-size:16px">${fmtK(d.commission)}</div><div class="l">佣金合计</div></div>
       <div class="prev-item"><div class="v" style="font-size:14px">${d.periods.map(esc).join('<br>')}</div><div class="l">业绩周期</div></div>`;
     $('preview').classList.remove('hide');
     let warn = '';
@@ -422,14 +420,14 @@ async function lReload(p) {
   lPage = p || lPage;
   const q = new URLSearchParams({ period: $('lPeriod').value, kw: $('lKw').value.trim(), onlyNa: $('lNa').value, page: lPage, size: 30 });
   const d = await api('/api/admin/records?' + q);
-  $('lAgg').innerHTML = `筛选结果：<b>${d.total}</b> 条 · 金额 <b class="money">${fmt(d.agg.amount)}</b> · 佣金 <b class="comm">${fmt(d.agg.commission)}</b>`;
+  $('lAgg').innerHTML = `筛选结果：<b>${d.total}</b> 条 · 金额 <b class="money">${fmt(d.agg.amount)}</b>`;
   $('lBody').innerHTML = d.rows.length ? d.rows.map((r) => `<tr>
     <td>${esc(r.user_id)}</td><td>${esc(r.nickname)}</td><td>${esc(r.name)}</td>
     <td><span class="tag">${esc(r.agent_level)}</span></td><td>${esc(r.period)}</td>
     <td>${esc(r.senior_id)}</td><td>${esc(r.senior_nickname)}</td><td>${esc(r.senior_name)}</td>
     <td>${r.phone ? esc(r.phone) : `<span class="tag na">${esc(r.phone_raw || '#N/A')}</span>`}</td>
-    <td>${esc(r.senior_level)}</td><td class="num money">${fmt(r.amount)}</td><td class="num comm">${fmt(r.commission)}</td></tr>`).join('')
-    : `<tr><td colspan="12" class="empty">没有匹配的数据</td></tr>`;
+    <td>${esc(r.senior_level)}</td><td class="num money">${fmt(r.amount)}</td></tr>`).join('')
+    : `<tr><td colspan="11" class="empty">没有匹配的数据</td></tr>`;
   $('lPager').innerHTML = d.total ? `
     <button onclick="lReload(1)" ${d.page <= 1 ? 'disabled' : ''}>首页</button>
     <button onclick="lReload(${d.page - 1})" ${d.page <= 1 ? 'disabled' : ''}>上一页</button>
@@ -451,7 +449,7 @@ async function loadDealers() {
   $('dReg').textContent = d.rows.filter((r) => r.registered).length;
   $('dBody').innerHTML = d.rows.length ? d.rows.map((r) => `<tr>
     <td><b>${esc(r.phone)}</b></td><td>${esc(r.name)}</td><td class="num">${r.rows}</td>
-    <td class="num money">${fmt(r.amount)}</td><td class="num comm">${fmt(r.commission)}</td>
+    <td class="num money">${fmt(r.amount)}</td>
     <td>${r.registered ? (r.status === 'active' ? '<span class="tag on">已注册</span>' : '<span class="tag off">已停用</span>') : '<span class="tag warn">未注册</span>'}</td>
     <td>${esc(r.last_login || '—')}</td><td class="num">${r.login_count || 0}</td>
     <td>${r.registered ? `

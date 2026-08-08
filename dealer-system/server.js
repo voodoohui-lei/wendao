@@ -117,13 +117,13 @@ function csvEscape(v) {
   const s = String(v == null ? '' : v);
   return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 }
-const CSV_HEADER = ['用户ID', '昵称', '姓名', '代理等级', '业绩周期', '归属高级ID', '归属高级昵称', '归属高级姓名', '电话', '归属高级等级', '金额', '佣金'];
+const CSV_HEADER = ['用户ID', '昵称', '姓名', '代理等级', '业绩周期', '归属高级ID', '归属高级昵称', '归属高级姓名', '电话', '归属高级等级', '金额'];
 function rowsToCsv(rows) {
   const lines = [CSV_HEADER.join(',')];
   for (const r of rows) {
     lines.push([r.user_id, r.nickname, r.name, r.agent_level, r.period, r.senior_id,
       r.senior_nickname, r.senior_name, r.phone || r.phone_raw || '#N/A', r.senior_level,
-      r.amount, r.commission].map(csvEscape).join(','));
+      r.amount].map(csvEscape).join(','));
   }
   return '\uFEFF' + lines.join('\r\n');
 }
@@ -345,13 +345,13 @@ const routes = {
   'GET /api/admin/stats': async (req, res) => {
     const c = requireAdmin(req, res); if (!c) return;
     const s = db.prepare(`SELECT COUNT(*) rows, COUNT(DISTINCT user_id) agents,
-        COALESCE(SUM(amount),0) amount, COALESCE(SUM(commission),0) commission,
+        COALESCE(SUM(amount),0) amount,
         SUM(CASE WHEN phone='' THEN 1 ELSE 0 END) naRows,
         COUNT(DISTINCT CASE WHEN phone<>'' THEN phone END) phones
       FROM performance`).get();
     const dealers = db.prepare(`SELECT COUNT(*) c, SUM(CASE WHEN status='active' THEN 1 ELSE 0 END) a FROM dealer`).get();
-    const periods = db.prepare(`SELECT period, COUNT(*) rows, COALESCE(SUM(amount),0) amount,
-        COALESCE(SUM(commission),0) commission FROM performance GROUP BY period ORDER BY period DESC`).all();
+    const periods = db.prepare(`SELECT period, COUNT(*) rows, COALESCE(SUM(amount),0) amount
+        FROM performance GROUP BY period ORDER BY period DESC`).all();
     const unregistered = db.prepare(`SELECT COUNT(DISTINCT phone) c FROM performance
       WHERE phone<>'' AND phone NOT IN (SELECT phone FROM dealer)`).get().c;
     return ok(res, { stats: s, dealers: { total: dealers.c || 0, active: dealers.a || 0, unregistered }, periods });
@@ -363,9 +363,9 @@ const routes = {
     const size = Math.min(200, Math.max(10, num(q.size, 30)));
     const { sql, params } = buildAdminWhere(q);
     const total = db.prepare(`SELECT COUNT(*) c FROM performance WHERE ${sql}`).get(...params).c;
-    const agg = db.prepare(`SELECT COALESCE(SUM(amount),0) amount, COALESCE(SUM(commission),0) commission FROM performance WHERE ${sql}`).get(...params);
+    const agg = db.prepare(`SELECT COALESCE(SUM(amount),0) amount FROM performance WHERE ${sql}`).get(...params);
     const rows = db.prepare(`SELECT id,user_id,nickname,name,agent_level,period,senior_id,senior_nickname,
-        senior_name,phone,phone_raw,senior_level,amount,commission
+        senior_name,phone,phone_raw,senior_level,amount
       FROM performance WHERE ${sql} ORDER BY id ASC LIMIT ? OFFSET ?`).all(...params, size, (page - 1) * size);
     return ok(res, { rows, total, agg, page, size, pages: Math.ceil(total / size) || 1 });
   },
@@ -378,7 +378,6 @@ const routes = {
              MAX(p.senior_name) AS name,
              COUNT(*) AS rows,
              COALESCE(SUM(p.amount),0) AS amount,
-             COALESCE(SUM(p.commission),0) AS commission,
              d.id IS NOT NULL AS registered,
              COALESCE(d.status,'') AS status,
              d.created_at AS reg_at,
@@ -448,7 +447,6 @@ const routes = {
         phones: phones.size,
         periods: [...new Set(parsed.records.map((r) => r.period))].sort(),
         amount: parsed.records.reduce((s, r) => s + r.amount, 0),
-        commission: parsed.records.reduce((s, r) => s + r.commission, 0),
         sample: parsed.records.slice(0, 5),
       });
     }
@@ -500,7 +498,7 @@ function handleExport(req, res, q) {
 }
 
 /* 经销商导出自己的数据（明确允许：仅本人数据，非全量台账）。
-   注意：佣金对经销商隐藏，导出也同步去掉。 */
+   注意：佣金对经销商+管理员均隐藏，导出同步去掉。 */
 function handleDealerExport(req, res, q) {
   const c = requireDealer(req, res); if (!c) return;
   const { sql, params } = buildDealerWhere(c.phone, { period: q.period });
