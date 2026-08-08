@@ -25,14 +25,27 @@ dnf install -y git nginx python3 python3-pip
 # certbot 在 EPEL；ACL3 默认源可能没有，启用 EPEL 备用
 dnf install -y epel-release || true
 
-# ---------- 2. 装 Node.js 22 LTS（NodeSource 官方源）----------
+# ---------- 2. 装 Node.js 22 LTS（NodeSource 官方源，失败则用二进制）----------
 echo "==> [2/8] 装 Node.js 22 LTS ..."
-if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | sed 's/v//' | cut -d. -f1)" -lt 20 ]]; then
-  curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
-  dnf install -y nodejs
+# 优先尝试 NodeSource（国内常因 SSL/网络失败）
+if ! command -v node >/dev/null 2>&1 || [[ "$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1)" -lt 20 ]]; then
+  if curl -fsSL --max-time 30 https://rpm.nodesource.com/setup_22.x | bash - 2>/dev/null && \
+     dnf install -y nodejs 2>&1 | tail -5; then
+    echo "  ✓ NodeSource 安装成功"
+  else
+    echo "  ⚠ NodeSource 装失败（SSL/网络），改用 npmmirror 二进制"
+    dnf remove -y nodejs 2>/dev/null || true
+    cd /opt
+    curl -fsSL --max-time 90 "https://registry.npmmirror.com/-/binary/node/v22.11.0/node-v22.11.0-linux-x64.tar.xz" -o /tmp/node22.tar.xz
+    tar -xJf /tmp/node22.tar.xz -C /opt/
+    ln -sf /opt/node-v22.11.0-linux-x64/bin/node    /usr/local/bin/node
+    ln -sf /opt/node-v22.11.0-linux-x64/bin/npm     /usr/local/bin/npm
+    ln -sf /opt/node-v22.11.0-linux-x64/bin/npx     /usr/local/bin/npx
+  fi
 fi
 node -v
 npm -v
+# 重要：Node 22 的 node:sqlite 模块是实验性的，需要 --experimental-sqlite flag
 
 # ---------- 3. 拉代码 ----------
 echo "==> [3/8] 拉代码到 /opt/dealer ..."
@@ -63,7 +76,8 @@ After=network.target
 
 [Service]
 WorkingDirectory=/opt/dealer/dealer-system
-ExecStart=/usr/bin/node server.js
+# ⚠ Node 22 的 node:sqlite 内置模块是实验性的，必须加 --experimental-sqlite
+ExecStart=/usr/local/bin/node --experimental-sqlite server.js
 Environment=PORT=8080
 Environment=HOST=127.0.0.1
 Restart=always

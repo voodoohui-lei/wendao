@@ -152,6 +152,18 @@ systemctl restart dealer
 | 服务启动但 `/api/dealer/me` 500 | 检查 `/var/log/dealer.log`，通常是数据目录权限或 db 文件损坏 |
 | `systemctl status dealer` 失败 | 看 `journalctl -xe`，常见是 Node 版本过低（要 ≥ 18） |
 | 经销商登录后看到"未登录" | 检查 Nginx 配置里 `proxy_set_header Host $host;` 是否在 |
+| **`No such built-in module: node:sqlite`** | **Node 22 的 sqlite 内置模块是实验性的，必须用 `node --experimental-sqlite` 启动**（脚本里已经处理） |
+| NodeSource 安装 SSL 失败 | 阿里云 ECS 出站对官方源常不友好，脚本会自动回退到 npmmirror 二进制方案 |
+
+## 6. 验证已部署的实例（2026-08-08 实测）
+
+阿里云 ECS `iZ7xviios97dorgiovwtjnZ`（8.163.67.15，Alibaba Cloud Linux 3.2104）：
+
+- **Node 22.11.0**（从 npmmirror 下载官方二进制，未走 NodeSource）
+- **systemd 服务** `dealer` active running，监听 `127.0.0.1:8080`
+- **Nginx 反代** 监听 `0.0.0.0:80`，转发到 8080
+- **数据库** `app.db` 从本地 SFTP 上传，含 605 行业绩 / 1 经销商 / 1 管理员
+- **业务接口** `GET /`、`GET /admin`、`POST /api/dealer/check-phone` 均 HTTP 200
 
 ---
 
