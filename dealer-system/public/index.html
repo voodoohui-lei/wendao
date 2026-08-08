@@ -71,7 +71,7 @@ main{max-width:1180px;margin:0 auto;padding:16px 16px 40px}
   border-radius:var(--radius);padding:13px 15px;margin-bottom:16px;display:flex;gap:10px;font-size:13.5px;color:#155e75}
 .notice svg{width:18px;height:18px;flex:none;margin-top:1px}
 
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
 .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:1px solid var(--line)}
 .card .lab{font-size:12.5px;color:var(--text2);display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .card .lab svg{width:14px;height:14px}
@@ -234,10 +234,6 @@ tbody tr:hover{background:#fafcfd}
         <div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>业绩金额</div>
         <div class="val" id="sAmount">¥0</div><div class="sub" id="sAmountSub">当前筛选周期</div>
       </div>
-      <div class="card c-orange">
-        <div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><path d="M7 7h.01"/></svg>佣金合计</div>
-        <div class="val" id="sComm">¥0</div><div class="sub">按当前筛选统计</div>
-      </div>
       <div class="card c-primary">
         <div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>门店数</div>
         <div class="val" id="sAgents">0</div><div class="sub">名下门店代理</div>
@@ -272,7 +268,6 @@ tbody tr:hover{background:#fafcfd}
             <th>昵称</th><th>姓名</th><th>代理等级</th>
             <th class="sortable" onclick="setSort('period')">业绩周期</th>
             <th class="num sortable" onclick="setSort('amount')">金额 ▾</th>
-            <th class="num sortable" onclick="setSort('commission')">佣金</th>
           </tr></thead>
           <tbody id="tbody"></tbody>
         </table>
@@ -439,7 +434,6 @@ async function reload() {
   try {
     const s = await api(`/api/dealer/summary?period=${encodeURIComponent(period)}`);
     $('sAmount').textContent = fmtK(s.total.amount);
-    $('sComm').textContent = fmtK(s.total.commission);
     $('sAgents').textContent = s.total.agents;
     $('sRows').textContent = s.total.rows;
     $('sAmountSub').textContent = period ? period + ' 周期' : '全部周期累计';
@@ -478,13 +472,13 @@ function renderRows(d) {
   const rows = d.rows;
   if (!rows.length) {
     const e = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/></svg><div>没有查询到业绩记录</div></div>`;
-    $('tbody').innerHTML = `<tr><td colspan="7">${e}</td></tr>`;
+    $('tbody').innerHTML = `<tr><td colspan="6">${e}</td></tr>`;
     $('mlist').innerHTML = e; $('pager').innerHTML = ''; return;
   }
   $('tbody').innerHTML = rows.map((r) => `<tr>
     <td>${esc(r.user_id)}</td><td>${esc(r.nickname)}</td><td>${esc(r.name)}</td>
     <td><span class="tag">${esc(r.agent_level)}</span></td><td>${esc(r.period)}</td>
-    <td class="num money">${fmt(r.amount)}</td><td class="num comm">${fmt(r.commission)}</td></tr>`).join('');
+    <td class="num money">${fmt(r.amount)}</td></tr>`).join('');
 
   $('mlist').innerHTML = rows.map((r) => `<div class="m-item">
     <div class="m-top"><div><div class="m-name">${esc(r.name || r.nickname)}</div>
@@ -492,7 +486,6 @@ function renderRows(d) {
       <span class="tag">${esc(r.agent_level)}</span></div>
     <div class="m-grid">
       <div><span>业绩金额</span><b class="money">${fmt(r.amount)}</b></div>
-      <div><span>佣金</span><b class="comm">${fmt(r.commission)}</b></div>
       <div><span>业绩周期</span><b>${esc(r.period)}</b></div>
     </div></div>`).join('');
 

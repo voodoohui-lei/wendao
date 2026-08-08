@@ -498,13 +498,14 @@ function handleExport(req, res, q) {
   res.end(buf);
 }
 
-/* 经销商导出自己的数据（明确允许：仅本人数据，非全量台账） */
+/* 经销商导出自己的数据（明确允许：仅本人数据，非全量台账）。
+   注意：佣金对经销商隐藏，导出也同步去掉。 */
 function handleDealerExport(req, res, q) {
   const c = requireDealer(req, res); if (!c) return;
   const { sql, params } = buildDealerWhere(c.phone, { period: q.period });
-  const rows = db.prepare(`SELECT * FROM performance WHERE ${sql} ORDER BY id ASC`).all(...params);
-  const lines = ['\uFEFF' + ['用户ID', '昵称', '姓名', '代理等级', '业绩周期', '金额', '佣金'].join(',')];
-  for (const r of rows) lines.push([r.user_id, r.nickname, r.name, r.agent_level, r.period, r.amount, r.commission].map(csvEscape).join(','));
+  const rows = db.prepare(`SELECT user_id,nickname,name,period,amount FROM performance WHERE ${sql} ORDER BY id ASC`).all(...params);
+  const lines = ['\uFEFF' + ['用户ID', '昵称', '姓名', '业绩周期', '金额'].join(',')];
+  for (const r of rows) lines.push([r.user_id, r.nickname, r.name, r.period, r.amount].map(csvEscape).join(','));
   const buf = Buffer.from(lines.join('\r\n'), 'utf8');
   audit('dealer', c.phone, 'export_self', `${rows.length} 行`, A.clientIp(req));
   res.writeHead(200, {
