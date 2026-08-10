@@ -32,3 +32,5 @@ yarn-debug.log*
 yarn-error.log*
 .env
 .env.local
+# local server log（之前误提交）
+dealer-system/server.log
