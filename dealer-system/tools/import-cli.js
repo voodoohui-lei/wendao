@@ -41,7 +41,6 @@ console.log('  业绩周期  ' + periods.join('、'));
 console.log('  手机号    ' + phones.size + ' 个可注册');
 console.log('  无手机号  ' + na + ' 行（#N/A，仅后台可见）');
 console.log('  金额合计  ¥' + records.reduce((s, r) => s + r.amount, 0).toFixed(2));
-console.log('  佣金合计  ¥' + records.reduce((s, r) => s + r.commission, 0).toFixed(2));
 console.log('  模式      ' + (replace ? '按周期覆盖（会删除同周期旧数据）' : '追加导入（重复行跳过）'));
 
 const mode = replace ? 'replace_period' : 'append';
@@ -54,8 +53,8 @@ const batchId = Number(batch.lastInsertRowid);
 const insert = db.prepare(`
   INSERT OR IGNORE INTO performance
     (user_id,nickname,name,agent_level,period,senior_id,senior_nickname,senior_name,
-     phone,phone_raw,senior_level,amount,commission,row_hash,batch_id,created_at)
-  VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+     phone,phone_raw,senior_level,amount,row_hash,batch_id,created_at)
+  VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
 
 const occ = new Map();
 const ts = nowISO();
@@ -66,12 +65,12 @@ try {
   if (replace) for (const p of periods) db.prepare(`DELETE FROM performance WHERE period=?`).run(p);
   for (const r of records) {
     const base = [r.user_id, r.nickname, r.name, r.agent_level, r.period, r.senior_id,
-      r.senior_nickname, r.senior_name, r.phone, r.senior_level, r.amount, r.commission].join('\u0001');
+      r.senior_nickname, r.senior_name, r.phone, r.senior_level, r.amount].join('\u0001');
     const n = (occ.get(base) || 0) + 1; occ.set(base, n);
     const hash = crypto.createHash('sha256').update(base + '\u0001#' + n).digest('hex');
     const res = insert.run(r.user_id, r.nickname, r.name, r.agent_level, r.period, r.senior_id,
       r.senior_nickname, r.senior_name, r.phone, r.phone_raw, r.senior_level,
-      r.amount, r.commission, hash, batchId, ts);
+      r.amount, hash, batchId, ts);
     if (res.changes > 0) inserted++; else dup++;
   }
   db.prepare(`UPDATE import_batch SET inserted=?,duplicated=? WHERE id=?`).run(inserted, dup, batchId);

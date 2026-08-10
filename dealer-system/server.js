@@ -143,8 +143,8 @@ function importRecords(records, { filename, mode, operator }) {
   const insert = db.prepare(`
     INSERT OR IGNORE INTO performance
       (user_id,nickname,name,agent_level,period,senior_id,senior_nickname,senior_name,
-       phone,phone_raw,senior_level,amount,commission,row_hash,batch_id,created_at)
-    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+       phone,phone_raw,senior_level,amount,row_hash,batch_id,created_at)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
   const ts = nowISO();
 
   db.exec('BEGIN');
@@ -155,13 +155,13 @@ function importRecords(records, { filename, mode, operator }) {
     for (const r of records) {
       if (!r.phone) naRows++;
       const base = [r.user_id, r.nickname, r.name, r.agent_level, r.period, r.senior_id,
-        r.senior_nickname, r.senior_name, r.phone, r.senior_level, r.amount, r.commission].join('\u0001');
+        r.senior_nickname, r.senior_name, r.phone, r.senior_level, r.amount].join('\u0001');
       const n = (occ.get(base) || 0) + 1;
       occ.set(base, n);
       const hash = crypto.createHash('sha256').update(base + '\u0001#' + n).digest('hex');
       const res = insert.run(r.user_id, r.nickname, r.name, r.agent_level, r.period, r.senior_id,
         r.senior_nickname, r.senior_name, r.phone, r.phone_raw, r.senior_level,
-        r.amount, r.commission, hash, batchId, ts);
+        r.amount, hash, batchId, ts);
       if (res.changes > 0) inserted++; else duplicated++;
     }
     db.prepare(`UPDATE import_batch SET inserted=?,duplicated=?,na_rows=? WHERE id=?`)
@@ -268,8 +268,7 @@ const routes = {
     return ok(res, { message: '密码修改成功，请重新登录' });
   },
 
-  /* ---------- 经销商：数据查询（行级隔离）。
-   注意：经销商端不展示佣金，API 也不再返回 commission 字段。---------- */
+  /* ---------- 经销商：数据查询（行级隔离）。佣金字段已于 2026-08 业务调整中彻底移除。---------- */
   'GET /api/dealer/summary': async (req, res, q) => {
     const c = requireDealer(req, res); if (!c) return;
     const { sql, params } = buildDealerWhere(c.phone, { period: q.period });
@@ -290,7 +289,7 @@ const routes = {
     const size = Math.min(100, Math.max(10, num(q.size, 20)));
     const { sql, params } = buildDealerWhere(c.phone, { period: q.period, kw: (q.kw || '').trim() });
     const total = db.prepare(`SELECT COUNT(*) c FROM performance WHERE ${sql}`).get(...params).c;
-    // commission 已对经销商隐藏，不再作为排序维度
+    // 佣金列已删除（2026-08 业务调整）
     const sortMap = { amount: 'amount', period: 'period', user_id: 'user_id' };
     const sort = sortMap[q.sort] || 'amount';
     const dir = q.dir === 'asc' ? 'ASC' : 'DESC';

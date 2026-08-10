@@ -80,7 +80,7 @@ function main() {
   };
 
   // 写 CSV
-  const HEADER = ['用户ID','昵称','姓名','代理等级','业绩周期','归属高级ID','归属高级昵称','归属高级姓名','电话','归属高级等级','金额','佣金'];
+  const HEADER = ['用户ID','昵称','姓名','代理等级','业绩周期','归属高级ID','归属高级昵称','归属高级姓名','电话','归属高级等级','金额'];
   const lines = [HEADER.join(',')];
   for (const r of filtered) {
     const aId = newAgent(String(r.user_id || ''));
@@ -98,7 +98,6 @@ function main() {
       phone,
       r.senior_level || '经销商',
       r.amount || 0,
-      r.commission || 0,
     ];
     // CSV 转义：含逗号/引号/换行的字段加双引号，内部双引号变 ""
     lines.push(row.map((v) => {

@@ -20,6 +20,15 @@ db.exec(`PRAGMA synchronous = NORMAL;`);
 db.exec(`PRAGMA busy_timeout = 5000;`);
 db.exec(`PRAGMA foreign_keys = ON;`);
 
+// ---------- 在线迁移：旧库若还有 commission 列，删掉（业务调整：佣金彻底移除）----------
+try {
+  const cols = db.prepare(`PRAGMA table_info(performance)`).all();
+  if (cols.some((c) => c.name === 'commission')) {
+    db.exec(`ALTER TABLE performance DROP COLUMN commission`);
+    console.log('[db] migration: dropped performance.commission');
+  }
+} catch (e) { console.warn('[db] migration commission-drop failed:', e.message); }
+
 db.exec(`
 -- ========== 1. 业绩台账（Excel 12 个固定字段落库）==========
 CREATE TABLE IF NOT EXISTS performance (
@@ -36,7 +45,6 @@ CREATE TABLE IF NOT EXISTS performance (
   phone_raw       TEXT    DEFAULT '',         -- 原始电话文本（保留 #N/A 供后台排查）
   senior_level    TEXT    DEFAULT '',         -- 归属高级等级
   amount          REAL    NOT NULL DEFAULT 0, -- 金额
-  commission      REAL    NOT NULL DEFAULT 0, -- 佣金
   row_hash        TEXT    NOT NULL UNIQUE,    -- 行指纹，重复导入自动去重
   batch_id        INTEGER,
   created_at      TEXT    NOT NULL

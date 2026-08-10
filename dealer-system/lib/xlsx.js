@@ -241,7 +241,6 @@ const FIELD_ALIASES = {
   phone:           ['电话', '手机号', '手机', '联系电话', '归属高级电话', '高级电话'],
   senior_level:    ['归属高级等级', '上级等级', '高级等级'],
   amount:          ['金额', '业绩金额', '销售额', '业绩'],
-  commission:      ['佣金', '提成', '分佣'],
 };
 
 function normHeader(h) {
@@ -334,10 +333,10 @@ function parseWorkbookToRecords(buf, filename) {
     if (score > bestScore) { bestScore = score; best = { map, missing }; headerIdx = i; }
   }
   if (!best || bestScore < 6) {
-    throw new Error('未识别到有效表头，请确认第一行是 12 个标准字段名（用户ID、昵称、姓名、代理等级、业绩周期、归属高级ID、归属高级昵称、归属高级姓名、电话、归属高级等级、金额、佣金）');
+    throw new Error('未识别到有效表头，请确认第一行是 11 个标准字段名（用户ID、昵称、姓名、代理等级、业绩周期、归属高级ID、归属高级昵称、归属高级姓名、电话、归属高级等级、金额）');
   }
   if (best.missing.length) {
-    const cn = { user_id: '用户ID', nickname: '昵称', name: '姓名', agent_level: '代理等级', period: '业绩周期', senior_id: '归属高级ID', senior_nickname: '归属高级昵称', senior_name: '归属高级姓名', phone: '电话', senior_level: '归属高级等级', amount: '金额', commission: '佣金' };
+    const cn = { user_id: '用户ID', nickname: '昵称', name: '姓名', agent_level: '代理等级', period: '业绩周期', senior_id: '归属高级ID', senior_nickname: '归属高级昵称', senior_name: '归属高级姓名', phone: '电话', senior_level: '归属高级等级', amount: '金额' };
     throw new Error('Excel 缺少必需列：' + best.missing.map((f) => cn[f] || f).join('、'));
   }
 
@@ -371,7 +370,6 @@ function parseWorkbookToRecords(buf, filename) {
       phone_raw: ph.raw,
       senior_level: cleanText(at(row, 'senior_level')),
       amount: cleanNumber(at(row, 'amount')),
-      commission: cleanNumber(at(row, 'commission')),
       _line: i + 1,
     });
   }

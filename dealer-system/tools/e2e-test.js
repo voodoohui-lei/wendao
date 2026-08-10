@@ -69,7 +69,6 @@ async function req(jar, method, url, body, raw) {
   const st = r.data.stats;
   assert(st.rows === prev.total, '台账总行数正确', st.rows + ' 行');
   assert(Math.abs(st.amount - prev.amount) < 0.01, '金额合计与源文件一致', '¥' + st.amount.toFixed(2));
-  assert(Math.abs(st.commission - prev.commission) < 0.01, '佣金合计与源文件一致', '¥' + st.commission.toFixed(2));
 
   /* ---------- 3. 选测试账号 ---------- */
   r = await req('admin', 'GET', '/api/admin/dealers');
